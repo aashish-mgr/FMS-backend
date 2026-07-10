@@ -8,7 +8,7 @@ import Role from "./roleModel";
     timestamps: true
 })
 
- class userRole extends Model <userRole> {
+ class UserRole extends Model <UserRole> {
     
     @Column({
         type: DataType.UUID,
@@ -40,4 +40,4 @@ import Role from "./roleModel";
     declare roleId: string
 }
 
-export default userRole;
+export default UserRole;
