@@ -1,6 +1,6 @@
 import {Sequelize} from "sequelize-typescript";
 import {envConfig} from "./envConfig";
-import User from "../models/userModel";
+import User from "../models/auth/userModel";
 
 const DATABASE_URL = envConfig.databaseUrl
 

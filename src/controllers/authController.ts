@@ -1,4 +1,4 @@
-import User from "../models/userModel";
+import User from "../models/auth/userModel";
 import { Request,Response } from "express";
 class authController {
     public static async login(req: Request, res: Response) {

@@ -1,4 +1,4 @@
-import User from "../models/userModel";
+import User from "../models/auth/userModel";
 import bcrypt from "bcrypt";
 import {envConfig} from "../config/envConfig";
 
