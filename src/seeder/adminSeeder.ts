@@ -1,6 +1,8 @@
 import User from "../models/auth/userModel";
 import bcrypt from "bcrypt";
 import {envConfig} from "../config/envConfig";
+import Role from "../models/auth/roleModel";
+import UserRole from "../models/auth/userRole";
 
 const adminSeeder = async () => {
     try {
@@ -8,7 +10,9 @@ const adminSeeder = async () => {
         userEmail: envConfig.adminEmail
     } })
     if(existingUser) {
-        return;
+         const accountantRole = await Role.findOne({ where: { roleName: "accountant" } });
+         await existingUser.$add("roles", accountantRole as any);
+         return;
     }
     const adminPassword = envConfig.adminPassword;
     if (!adminPassword) {
@@ -20,8 +24,10 @@ const adminSeeder = async () => {
         userEmail: "admin@gmail.com",
         userPassword: bcrypt.hashSync(adminPassword, 10),
     } as any);
-    console.log("Admin user seeded successfully");
-    }
+   
+   
+    
+}
     catch (error) {
         console.error("Error seeding admin user:", error);
     }
