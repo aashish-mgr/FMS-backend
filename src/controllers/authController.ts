@@ -4,13 +4,14 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { envConfig } from "../config/envConfig";
 class authController {
-    public static async login(req: Request, res: Response) {
-         const {userEmail,userPassword} = req.body;
-         const user =await User.findOne({where: userEmail});
-           if(!user) {
+     async login(req: Request, res: Response) {
+         const { userEmail, userPassword } = req.body;
+         const user = await User.findOne({ where: { userEmail } });
+
+         if (!user) {
             return res.status(400).json({
                 message: "user not found"
-            })
+            });
          }
          const isPasswordValid = await bcrypt.compare(userPassword,user?.userPassword as string);
         if(!isPasswordValid) {
@@ -32,4 +33,4 @@ class authController {
     }
 }
 
-export default authController;
+export default new  authController();
