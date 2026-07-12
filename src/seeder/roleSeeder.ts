@@ -4,13 +4,9 @@ const ROLES = ["admin","superAdmin","accountant"];
 
 const roleSeeder = async () => {
     try {
-    const existingRoles = await Role.findOne({
-        where: {
-            roleName: ROLES,
-        },
-    });
+    const existingRoles = await Role.findAll();
 
-    if(existingRoles) {
+    if(existingRoles.length !== 0) {
         return;
     }
     
