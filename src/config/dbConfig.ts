@@ -7,6 +7,7 @@ import IncomeCategory from "../models/category/incomeCategory";
 import ExpenseCategory from "../models/category/expenceCategory";
 import Income from "../models/transactions/income";
 import Expense from "../models/transactions/expense";
+import Note from "../models/supporting model/notes";
 import {applyRelationship} from "../models/relationship";
 
 const DATABASE_URL = envConfig.databaseUrl
@@ -14,7 +15,7 @@ const DATABASE_URL = envConfig.databaseUrl
 const sequelize = new Sequelize(DATABASE_URL as string, {
      dialect: 'postgres',
     protocol: 'postgres',
-    models: [User,Role,UserRole,IncomeCategory,ExpenseCategory,Income,Expense],
+    models: [User,Role,UserRole,IncomeCategory,ExpenseCategory,Income,Expense,Note],
     logging: console.log,
     dialectOptions: {
         ssl: {
