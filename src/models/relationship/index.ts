@@ -1,6 +1,7 @@
 import User from "../auth/userModel";
 import Role from "../auth/roleModel";
 import UserRole from "../auth/userRole";
+import { transactionRelationships } from "./transactionRel";
 
 const applyRelationship = () => {
   User.belongsToMany(Role, {
@@ -14,6 +15,8 @@ const applyRelationship = () => {
     foreignKey: "roleId",
     otherKey: "userId",
   });
+
+  transactionRelationships();
 };
 
 export { applyRelationship };
