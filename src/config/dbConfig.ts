@@ -3,6 +3,7 @@ import {envConfig} from "./envConfig";
 import User from "../models/auth/userModel";
 import Role from "../models/auth/roleModel";
 import UserRole from "../models/auth/userRole";
+import IncomeCategory from "../models/category/incomeCategory";
 import {applyRelationship} from "../models/relationship";
 
 const DATABASE_URL = envConfig.databaseUrl
@@ -10,7 +11,7 @@ const DATABASE_URL = envConfig.databaseUrl
 const sequelize = new Sequelize(DATABASE_URL as string, {
      dialect: 'postgres',
     protocol: 'postgres',
-    models: [User,Role,UserRole],
+    models: [User,Role,UserRole,IncomeCategory],
     logging: console.log,
     dialectOptions: {
         ssl: {
