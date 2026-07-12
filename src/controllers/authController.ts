@@ -3,6 +3,7 @@ import { Request,Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { envConfig } from "../config/envConfig";
+import cookieParser from "cookie-parser";
 class authController {
      async login(req: Request, res: Response) {
          const { userEmail, userPassword } = req.body;
@@ -20,13 +21,23 @@ class authController {
             })
         }
 
-        const token = jwt.sign({id: user.id},envConfig.jwtSecret, {
-            expiresIn: "15d"
+        const accessToken = jwt.sign({id: user.id},envConfig.jwtSecret, {
+            expiresIn: "15m"
+        });
+
+        const refreshToken = jwt.sign({id: user.id},envConfig.jwtSecret,{
+            expiresIn: "7d"
+        })
+
+        res.cookie("refreshToken",refreshToken,{
+            httpOnly: true,
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
         return res.status(200).json({
             message: "Login successful",
-            token
+            accessToken
         })
          
        
