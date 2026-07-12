@@ -5,6 +5,7 @@ import {adminSeeder} from './seeder/adminSeeder';
 import {roleSeeder} from './seeder/roleSeeder';
 import authRoute from './routes/userRoute'
 import { incomeSeeder } from './seeder/incomeCategorySeed';
+import { expenseSeeder } from './seeder/expenseCategorySeed';
 
 
 const app = express();
@@ -13,6 +14,7 @@ app.use(express.json());
 connectDb();
 adminSeeder();
 incomeSeeder();
+expenseSeeder();
 roleSeeder();
 
 
