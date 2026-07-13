@@ -4,6 +4,7 @@ import express from 'express'
 
 const router = express.Router();
 
-router.route("/create").post(handleError(incomeController.createIncome as any))
+router.route("/create").post(handleError(incomeController.createIncome as any));
+router.route("/getALl").get(handleError(incomeController.getIncome));
 
 export default router;

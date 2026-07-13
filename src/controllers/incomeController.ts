@@ -39,6 +39,20 @@ class incomeController {
 
     
   }
+
+  async getIncome (req: Request, res: Response) {
+    const data = Income.findAll();
+    if(!data) {
+      return res.status(400).json({
+         message: "income records not found"
+      })
+    }
+
+    return res.status(200).json({
+      message: "fetched income records",
+      data
+    })
+  }
 }
 
 export default new incomeController();
