@@ -4,6 +4,7 @@ import { connectDb } from './config/dbConfig';
 import {adminSeeder} from './seeder/adminSeeder';
 import {roleSeeder} from './seeder/roleSeeder';
 import authRoute from './routes/userRoute'
+import incomeRoute from './routes/incomeRoute'
 import { incomeSeeder } from './seeder/incomeCategorySeed';
 import { expenseSeeder } from './seeder/expenseCategorySeed';
 import cookieParser from 'cookie-parser';
@@ -21,5 +22,6 @@ roleSeeder();
 
 
 app.use("/api/auth",authRoute);
+app.use("/api/income",incomeRoute);
 
 export default app;
