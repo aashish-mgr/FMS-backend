@@ -35,7 +35,7 @@ class Income extends Model<Income> {
   @Column({
     type: DataType.STRING,
   })
-  declare incomeSouce: string;
+  declare incomeSource: string;
 
   @Column({
     type: DataType.STRING,
