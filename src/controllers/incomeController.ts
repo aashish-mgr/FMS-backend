@@ -53,6 +53,69 @@ class incomeController {
       data
     })
   }
+
+  async getSingleIncome (req: Request,res: Response) {
+      const {id} = req.params;
+      if(!id) {
+        return res.status(400).json({
+          message: "id is required"
+        })
+      }
+      const data = await Income.findOne({where: {id}});
+      if(!data) {
+        return res.status(400).json({
+          message: "record not found"
+        })
+      }
+      return res.status(200).json({
+        message: "record fetched successfully",
+        data
+      })
+  }
+
+  async updateIncome (req: Request,res: Response) {
+    const {
+      amount,
+      incomeCategoryId,
+      paymentMethod,
+      incomeSource,
+      clientName,
+      referenceNumber,
+      invoiceNumber,
+      description,
+      transactionDate,
+    } = req?.body;
+
+    const {id} = req?.params;
+
+    if(!id) {
+      return res.status(400).json({
+        message: "id is required"
+      })
+    }
+
+    await Income.update({ amount,
+      incomeCategoryId,
+      paymentMethod,
+      incomeSource,
+      clientName,
+      referenceNumber,
+      invoiceNumber,
+      description,
+      transactionDate},{where: {id}});
+
+      const updatedData = await Income.findOne({where: {id}});
+      if(!updatedData) {
+        return res.status(400).json({
+          message: "record not found"
+        });
+      }
+
+      return res.status(200).json({
+        message: "records updated successfully",
+        updatedData
+      })
+  }
 }
 
 export default new incomeController();
