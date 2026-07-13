@@ -4,6 +4,8 @@ import { DataType, Model, Table, Column } from "sequelize-typescript";
   tableName: "incomes",
   modelName: "Income",
   timestamps: true,
+  underscored: true,
+  paranoid: true,
 })
 class Income extends Model<Income> {
   @Column({

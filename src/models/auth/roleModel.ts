@@ -3,7 +3,10 @@ import {Column, DataType, Model, Table} from "sequelize-typescript";
 @Table({
         tableName: "roles",
         modelName: "Role",
-        timestamps: true
+        timestamps: true,
+        underscored: true,
+  paranoid: true,
+
 })
 
  class Role extends Model<Role> {

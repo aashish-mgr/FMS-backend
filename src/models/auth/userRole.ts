@@ -5,7 +5,9 @@ import Role from "./roleModel";
 @Table({
     tableName: "userRoles",
     modelName: "userRole",
-    timestamps: true
+    timestamps: true,
+    underscored: true,
+  paranoid: true,
 })
 
  class UserRole extends Model <UserRole> {
