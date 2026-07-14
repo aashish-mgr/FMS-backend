@@ -4,8 +4,8 @@ import { DataType, Model, Table, Column } from "sequelize-typescript";
   tableName: "incomes",
   modelName: "Income",
   timestamps: true,
-  underscored: true,
-  paranoid: true,
+
+
 })
 class Income extends Model<Income> {
   @Column({
@@ -20,7 +20,7 @@ class Income extends Model<Income> {
     type: DataType.DATE,
     allowNull: false,
   })
-  declare transactionDate: Date;
+  declare transactionDate: string;
 
   @Column({
     type: DataType.DECIMAL(15, 2),

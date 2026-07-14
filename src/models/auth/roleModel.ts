@@ -4,8 +4,7 @@ import {Column, DataType, Model, Table} from "sequelize-typescript";
         tableName: "roles",
         modelName: "Role",
         timestamps: true,
-        underscored: true,
-  paranoid: true,
+
 
 })
 

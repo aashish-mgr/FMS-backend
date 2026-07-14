@@ -6,8 +6,8 @@ import Role from "./roleModel";
     tableName: "userRoles",
     modelName: "userRole",
     timestamps: true,
-    underscored: true,
-  paranoid: true,
+   
+
 })
 
  class UserRole extends Model <UserRole> {

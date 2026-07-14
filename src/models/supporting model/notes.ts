@@ -4,8 +4,8 @@ import { DataType, Table,Column,Model } from "sequelize-typescript";
     tableName: "notes",
     modelName: "note",
     timestamps: true,
-    underscored: true,
-  paranoid: true,
+
+
 })
 
 class Note extends Model <Note> {

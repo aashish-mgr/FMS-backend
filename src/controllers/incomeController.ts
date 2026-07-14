@@ -116,6 +116,8 @@ class incomeController {
         updatedData
       })
   }
+
+
 }
 
 export default new incomeController();

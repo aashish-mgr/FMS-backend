@@ -5,8 +5,8 @@ import { Column, DataType, Model, Table } from "sequelize-typescript";
     tableName: "users",
     modelName: "User",
     timestamps: true,
-    underscored: true,
-  paranoid: true,
+  
+
 })
 
 class User extends Model<User> {

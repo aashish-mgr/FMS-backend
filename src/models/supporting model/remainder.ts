@@ -5,8 +5,8 @@ import { DataType, Table,Column,Model } from "sequelize-typescript";
     tableName: "remainders",
     modelName: "remainder",
     timestamps: true,
-    underscored: true,
-  paranoid: true,
+
+
 })
 
 class Remainder extends Model <Remainder> {
