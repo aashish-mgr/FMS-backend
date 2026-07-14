@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+ 
+}
+
+model User {
+  id                                 String      @id @default(uuid()) @db.Uuid
+  userName                           String      @db.VarChar(255)
+  userEmail                          String      @db.VarChar(255)
+  userPassword                       String      @db.VarChar(255)
+  createdAt                          DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt                          DateTime    @updatedAt @db.Timestamptz(6)
+  deletedAt                          DateTime?   @db.Timestamptz(6)
+  expenses_expenses_createdByTousers Expense[]   @relation("expenses_createdByTousers")
+  expenses_expenses_updatedByTousers Expense[]   @relation("expenses_updatedByTousers")
+  incomes_incomes_createdByTousers   Income[]    @relation("incomes_createdByTousers")
+  incomes_incomes_updatedByTousers   Income[]    @relation("incomes_updatedByTousers")
+  notes                              Note[]
+  remainders                         Remainder[]
+  userRoles                          UserRole[]
+
+  @@map("users")
+}
+
+model Role {
+  id        String     @id @default(uuid()) @db.Uuid
+  roleName  String     @db.VarChar(255)
+  createdAt DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime   @updatedAt @db.Timestamptz(6)
+  userRoles UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  roleId    String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  roles     Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("userRoles")
+}
+
+model IncomeCategory {
+  id                  String   @id @default(uuid()) @db.Uuid
+  categoryName        String   @db.VarChar(255)
+  categoryDescription String   @db.VarChar(255)
+  createdAt           DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime @updatedAt @db.Timestamptz(6)
+  incomes             Income[]
+
+  @@map("incomeCategories")
+}
+
+model ExpenseCategory {
+  id                  String    @id @default(uuid()) @db.Uuid
+  categoryName        String    @db.VarChar(255)
+  categoryDescription String    @db.VarChar(255)
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @db.Timestamptz(6)
+  expenses            Expense[]
+
+  @@map("expenseCategories")
+}
+
+model Income {
+  id                             String         @id @default(uuid()) @db.Uuid
+  transactionDate                DateTime       @db.Timestamptz(6)
+  amount                         Decimal        @db.Decimal(15, 2)
+  incomeCategoryId               String         @db.Uuid
+  incomeSource                   String?        @db.VarChar(255)
+  clientName                     String?        @db.VarChar(255)
+  paymentMethod                  String         @db.VarChar(255)
+  referenceNumber                String?        @db.VarChar(255)
+  invoiceNumber                  String?        @db.VarChar(255)
+  description                    String?        @db.VarChar(255)
+  createdBy                      String?        @db.Uuid
+  updatedBy                      String?        @db.Uuid
+  createdAt                      DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt                      DateTime       @updatedAt @db.Timestamptz(6)
+  deletedAt                      DateTime?      @db.Timestamptz(6)
+  users_incomes_createdByTousers User?          @relation("incomes_createdByTousers", fields: [createdBy], references: [id], onDelete: Cascade)
+  incomeCategories               IncomeCategory @relation(fields: [incomeCategoryId], references: [id], onDelete: Cascade)
+  users_incomes_updatedByTousers User?          @relation("incomes_updatedByTousers", fields: [updatedBy], references: [id], onDelete: Cascade)
+
+  @@map("incomes")
+}
+
+model Expense {
+  id                              String          @id @default(uuid()) @db.Uuid
+  transactionDate                 DateTime        @db.Timestamptz(6)
+  amount                          Decimal         @db.Decimal(15, 2)
+  expenseCategoryId               String          @db.Uuid
+  vendorName                      String?         @db.VarChar(255)
+  paymentMethod                   String          @db.VarChar(255)
+  billNumber                      String?         @db.VarChar(255)
+  description                     String?         @db.VarChar(255)
+  createdBy                       String?         @db.Uuid
+  updatedBy                       String?         @db.Uuid
+  createdAt                       DateTime        @db.Timestamptz(6)
+  updatedAt                       DateTime        @db.Timestamptz(6)
+  users_expenses_createdByTousers User?           @relation("expenses_createdByTousers", fields: [createdBy], references: [id], onDelete: Cascade)
+  expenseCategories               ExpenseCategory @relation(fields: [expenseCategoryId], references: [id], onDelete: Cascade)
+  users_expenses_updatedByTousers User?           @relation("expenses_updatedByTousers", fields: [updatedBy], references: [id], onDelete: Cascade)
+
+  @@map("expenses")
+}
+
+model Note {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String   @db.VarChar(255)
+  description String   @db.VarChar(255)
+  colorLabel  String?  @db.VarChar(255)
+  isPinned    Boolean? @default(false)
+  isArchived  Boolean? @default(false)
+  createdBy   String?  @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+  deletedAt   DateTime? @db.Timestamptz(6)
+  users       User?    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("notes")
+}
+
+model Remainder {
+  id            String                   @id @default(uuid()) @db.Uuid
+  title         String                   @db.VarChar(255)
+  description   String?                  @db.VarChar(255)
+  remainderDate DateTime                 @db.Timestamptz(6)
+  remainderTime DateTime?                @db.Time(6)
+  priority      enum_remainders_priority
+  status        enum_remainders_status   @default(PENDING)
+  repeat        enum_remainders_repeat?  @default(NONE)
+  createdBy     String?                  @db.Uuid
+  createdAt     DateTime                 @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime                 @updatedAt @db.Timestamptz(6)
+  deletedAt     DateTime?                @db.Timestamptz(6)
+  users         User?                    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("remainders")
+}
+
+model AuditLogs {
+  id String @id @default(uuid())  @db.Uuid
+  userId String? @db.Uuid
+  action String @db.VarChar(100)
+  entityType String @db.VarChar(50)
+  entityId String @db.Uuid
+  oldValues Json? @db.JsonB
+  newValues Json? @db.JsonB
+  ipAddress String? @db.Inet 
+  createdAt DateTime @default(now()) @db.Timestamptz()
+
+  @@map("auditlogs")
+}
+
+enum enum_remainders_priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum enum_remainders_repeat {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum enum_remainders_status {
+  PENDING
+  COMPLETED
+}

@@ -1,27 +1,26 @@
-import express from 'express';
-import dotenv from 'dotenv'
-import { connectDb } from './config/dbConfig';
-import {adminSeeder} from './seeder/adminSeeder';
-import {roleSeeder} from './seeder/roleSeeder';
-import authRoute from './routes/userRoute'
-import incomeRoute from './routes/incomeRoute'
-import { incomeSeeder } from './seeder/incomeCategorySeed';
-import { expenseSeeder } from './seeder/expenseCategorySeed';
-import cookieParser from 'cookie-parser';
-
+import express from "express";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import { connectDb } from "./config/database";
+import authRoute from "./modules/auth/auth.routes";
+import incomeRoute from "./modules/income/income.routes";
+import { globalErrorHandler } from "./middleware/errorHandler";
 
 const app = express();
 dotenv.config();
+
 app.use(express.json());
+app.use(cookieParser());
+
 connectDb();
-app.use(cookieParser())
-adminSeeder();
-incomeSeeder();
-expenseSeeder();
-roleSeeder();
 
+app.use("/api/auth", authRoute);
+app.use("/api/income", incomeRoute);
 
-app.use("/api/auth",authRoute);
-app.use("/api/income",incomeRoute);
+// Registered last so it catches errors forwarded from every route above
+// (see src/middleware/errorHandler.ts). The original app.ts had no
+// equivalent global handler — errors from `handleError` just hung or
+// crashed the request; this fixes that.
+app.use(globalErrorHandler);
 
 export default app;
