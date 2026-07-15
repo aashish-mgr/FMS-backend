@@ -33,6 +33,10 @@ class NoteController {
             return sendError(res,"id is required")
         }
         const data = await noteServices.findById(id as string);
+
+        if(!data) {
+            return sendError(res,"data not found")
+        }
          return sendSuccess(res,"Note fetched successfully",data);
     }
 
@@ -62,6 +66,28 @@ class NoteController {
       return sendError(res, "record not found");
     }
         return sendSuccess(res,"Note deleted successfully", deletedData);
+    }
+
+    async togglePin(req: Request, res: Response) {
+        const {id} = req.params;
+        const {isPinned} = req.body;
+        if(!id || !isPinned) {
+            return sendError(res,"provide all detail");
+        }
+        
+        const data = await noteServices.togglePin(id as string, isPinned);
+        return sendSuccess(res,"successfully toggled isPinned",data);
+    }
+    
+      async toggleArchive(req: Request, res: Response) {
+        const {id} = req.params;
+        const {isArchived} = req.body;
+        if(!id || !isArchived) {
+            return sendError(res,"provide all detail");
+        }
+        
+        const data = await noteServices.toggleArchive(id as string, isArchived);
+        return sendSuccess(res,"successfully toggled isArchived",data);
     }
 }
 

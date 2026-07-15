@@ -13,7 +13,7 @@ class NoteService {
   }
 
   async findById(id: string) {
-    return prisma.note.findFirst({ where: { id } });
+    return prisma.note.findFirst({ where: { id, deletedAt: null } });
   }
 
   async update(id: string, data: UpdateNoteInput) {
@@ -45,7 +45,7 @@ class NoteService {
     return prisma.note.update({ where: { id }, data: { isPinned } });
   }
 
-  async toggleArchive(id: string, isArchived: boolean, userId: string) {
+  async toggleArchive(id: string, isArchived: boolean) {
     const existing = await this.findById(id);
     if (!existing) return null;
     return prisma.note.update({ where: { id }, data: { isArchived } });

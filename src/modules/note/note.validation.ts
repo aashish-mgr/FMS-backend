@@ -6,7 +6,7 @@ export const createNoteSchema = z.object({
     colorLabel: z.string().optional(),
     isPinned: z.boolean().optional().default(false),
     isArchived: z.boolean().optional().default(false),
-    createdBy: z.string().uuid(),
+    createdBy: z.string().uuid().optional(),
 
 })
 

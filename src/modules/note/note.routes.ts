@@ -14,5 +14,6 @@ router
   .patch(authGuard.isAuthenticated, handleError(noteController.updateNote))
   .delete(authGuard.isAuthenticated,handleError(noteController.deleteNote))
   
-
+router.route("/:id/pin").patch(authGuard.isAuthenticated, handleError(noteController.togglePin));
+router.route("/:id/archive").patch(authGuard.isAuthenticated, handleError(noteController.toggleArchive))
   export default router;
