@@ -3,16 +3,8 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../config/database";
 import { envConfig } from "../../config/env";
 import { ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN } from "../../config/constants";
+import { httpError } from "../../utils/httpError";
 
-interface HttpError extends Error {
-  statusCode?: number;
-}
-
-const httpError = (message: string, statusCode: number): HttpError => {
-  const err: HttpError = new Error(message);
-  err.statusCode = statusCode;
-  return err;
-};
 
 class AuthService {
   async login(userEmail: string, userPassword: string) {
