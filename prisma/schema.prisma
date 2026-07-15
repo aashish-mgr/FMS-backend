@@ -4,25 +4,25 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
- 
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id                                 String      @id @default(uuid()) @db.Uuid
-  userName                           String      @db.VarChar(255)
-  userEmail                          String      @db.VarChar(255)
-  userPassword                       String      @db.VarChar(255)
-  createdAt                          DateTime    @default(now()) @db.Timestamptz(6)
-  updatedAt                          DateTime    @updatedAt @db.Timestamptz(6)
-  deletedAt                          DateTime?   @db.Timestamptz(6)
-  expenses_expenses_createdByTousers Expense[]   @relation("expenses_createdByTousers")
-  expenses_expenses_updatedByTousers Expense[]   @relation("expenses_updatedByTousers")
-  incomes_incomes_createdByTousers   Income[]    @relation("incomes_createdByTousers")
-  incomes_incomes_updatedByTousers   Income[]    @relation("incomes_updatedByTousers")
+  id                                 String       @id @default(uuid()) @db.Uuid
+  userName                           String       @db.VarChar(255)
+  userEmail                          String       @db.VarChar(255)
+  userPassword                       String       @db.VarChar(255)
+  createdAt                          DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt                          DateTime     @updatedAt @db.Timestamptz(6)
+  deletedAt                          DateTime?    @db.Timestamptz(6)
+  expenses_expenses_createdByTousers Expense[]    @relation("expenses_createdByTousers")
+  expenses_expenses_updatedByTousers Expense[]    @relation("expenses_updatedByTousers")
+  incomes_incomes_createdByTousers   Income[]     @relation("incomes_createdByTousers")
+  incomes_incomes_updatedByTousers   Income[]     @relation("incomes_updatedByTousers")
   notes                              Note[]
   remainders                         Remainder[]
   userRoles                          UserRole[]
+  attachments                        Attachment[]
 
   @@map("users")
 }
@@ -117,17 +117,17 @@ model Expense {
 }
 
 model Note {
-  id          String   @id @default(uuid()) @db.Uuid
-  title       String   @db.VarChar(255)
-  description String   @db.VarChar(255)
-  colorLabel  String?  @db.VarChar(255)
-  isPinned    Boolean? @default(false)
-  isArchived  Boolean? @default(false)
-  createdBy   String?  @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String    @db.VarChar(255)
+  description String    @db.VarChar(255)
+  colorLabel  String?   @db.VarChar(255)
+  isPinned    Boolean?  @default(false)
+  isArchived  Boolean?  @default(false)
+  createdBy   String?   @db.Uuid
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
   deletedAt   DateTime? @db.Timestamptz(6)
-  users       User?    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  users       User?     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@map("notes")
 }
@@ -151,17 +151,37 @@ model Remainder {
 }
 
 model AuditLogs {
-  id String @id @default(uuid())  @db.Uuid
-  userId String? @db.Uuid
-  action String @db.VarChar(100)
-  entityType String @db.VarChar(50)
-  entityId String? @db.Uuid
-  oldValues Json? @db.JsonB
-  newValues Json? @db.JsonB
-  ipAddress String? @db.Inet 
-  createdAt DateTime @default(now()) @db.Timestamptz()
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @db.Uuid
+  action     String   @db.VarChar(100)
+  entityType String   @db.VarChar(50)
+  entityId   String?  @db.Uuid
+  oldValues  Json?    @db.JsonB
+  newValues  Json?    @db.JsonB
+  ipAddress  String?  @db.Inet
+  createdAt  DateTime @default(now()) @db.Timestamptz()
 
   @@map("auditlogs")
+}
+
+model Attachment {
+  id         String    @id @default(uuid()) @db.Uuid
+  entityType String    @db.VarChar(50)
+  entityId   String    @db.Uuid
+  fileName   String    @db.VarChar(255)
+  fileSize   Int // bytes; Int is fine up to ~2GB, well above the 10MB cap
+  mimeType   String    @db.VarChar(100)
+  storageKey String    @db.VarChar(500)
+  storageUrl String    @db.Text
+  provider   String    @db.VarChar(50)
+  uploadedBy String    @db.Uuid
+  uploader   User      @relation(fields: [uploadedBy], references: [id])
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+
+  @@index([entityType, entityId])
+  @@index([deletedAt])
+  @@map("attachments")
 }
 
 enum enum_remainders_priority {

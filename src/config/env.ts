@@ -3,10 +3,7 @@ import { z } from "zod";
 
 dotenv.config();
 
-// The Prisma-based folder structure calls for Zod-validated env vars
-// (as opposed to the old envConfig.ts, which just cast process.env values
-// with `as string` and trusted them). This fails fast with a clear error
-// instead of the app silently running with `undefined` secrets.
+
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   ADMIN_EMAIL: z.string().min(1, "ADMIN_EMAIL is required"),
@@ -27,3 +24,4 @@ export const envConfig = {
   adminPassword: parsed.data.ADMIN_PASSWORD,
   jwtSecret: parsed.data.JWT_SECRET,
 };
+
