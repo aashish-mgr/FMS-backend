@@ -1,7 +1,7 @@
 // src/middleware/upload.middleware.ts
 import multer from 'multer';
 import path from 'path';
-import { Request } from 'express';
+import { Request,Response,NextFunction } from 'express';
 import { envConfig } from '../config/env';
 import { AppError } from '../utils/AppError';
 
@@ -31,3 +31,8 @@ export const uploadAttachment = multer({
     files: 10, // SRS 13.1: no hard limit, but recommends 10 in UI
   },
 });
+
+export const withEntityType = (type: string) => (req: Request, res: Response, next: NextFunction) => {
+  req.params.entityType = type;
+  next();
+};
