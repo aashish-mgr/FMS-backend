@@ -51,3 +51,5 @@ class NoteService {
     return prisma.note.update({ where: { id }, data: { isArchived } });
   }
 }
+
+export default new NoteService();
