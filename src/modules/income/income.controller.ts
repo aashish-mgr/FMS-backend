@@ -51,7 +51,11 @@ class IncomeController {
     if (!id || Array.isArray(id)) {
       return sendError(res, "id is required");
     }
-
+     const data = await incomeService.findById(id);
+            if(!data) {
+              return sendError(res,"Record doesnot exist")
+            }
+    
     const parsed = updateIncomeSchema.safeParse(req.body);
     if (!parsed.success) {
       return sendError(res, "Invalid input");

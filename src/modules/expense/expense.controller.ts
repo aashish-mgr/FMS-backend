@@ -46,16 +46,26 @@ class ExpenseController {
        return sendSuccess(res,"record fetched successfully",data);
       }
     
-      async updateExpense(req: Request, res: Response) {
+      async updateExpense(req: AuthRequest, res: Response) {
         const { id } = req.params;
         if (!id || Array.isArray(id)) {
         return  sendError(res,"id is required");
+        }
+
+        const data = await expenseService.findById(id);
+        if(!data) {
+          return sendError(res,"Record doesnot exist")
         }
     
         const parsed = updateExpenseSchema.safeParse(req.body);
         if (!parsed.success) {
         return  sendError(res,"Invalid input");
         }
+        const userId = req.user?.id;
+         if (!userId) {
+                return sendError(res, "User authentication required")
+            }
+            parsed.data.updatedBy = userId;
     
         const updatedData = await expenseService.update( parsed.data!,id as string);
         if (!updatedData) {

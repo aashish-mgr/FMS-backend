@@ -2,7 +2,7 @@ import { prisma } from "../../config/database";
 import { CreateIncomeInput, UpdateIncomeInput } from "./income.validation";
 import { httpError } from "../../utils/httpError";
 
-function removeUndefinedFields<T extends object>(data: T | null | undefined) {
+export function removeUndefinedFields<T extends object>(data: T | null | undefined) {
   if (!data || typeof data !== "object") {
     return {} as { [K in keyof T]-?: Exclude<T[K], undefined> };
   }
