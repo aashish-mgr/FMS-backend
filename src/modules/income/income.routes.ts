@@ -3,18 +3,19 @@ import { handleError } from "../../middleware/errorHandler";
 import express from "express";
 import { withEntityType } from "../../middleware/upload.middleware";
 import attachmentRoutes from "../attachment/attachment.routes"
+import authGuard from "../../middleware/authGuard";
 
 const router = express.Router();
 
 router
   .route("/")
-  .post(handleError(incomeController.createIncome))
-  .get(handleError(incomeController.getIncome));
+  .post(authGuard.isAuthenticated,handleError(incomeController.createIncome))
+  .get(authGuard.isAuthenticated,handleError(incomeController.getIncome));
 router
   .route("/:id")
-  .get(handleError(incomeController.getSingleIncome))
-  .patch(handleError(incomeController.updateIncome))
-  .delete(handleError(incomeController.deleteIncome));
+  .get(authGuard.isAuthenticated,handleError(incomeController.getSingleIncome))
+  .patch(authGuard.isAuthenticated,handleError(incomeController.updateIncome))
+  .delete(authGuard.isAuthenticated,handleError(incomeController.deleteIncome));
 
   router.use('/:entityId/attachments', withEntityType('income'), attachmentRoutes);
 

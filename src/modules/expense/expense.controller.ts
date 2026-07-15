@@ -12,11 +12,16 @@ class ExpenseController {
             if(!parsed.success) {
                return sendError(res,"Please provide all the details")
             }
+            const userId = req.user?.id;
+            if (!userId) {
+                return sendError(res, "User authentication required")
+            }
+            parsed.data.createdBy = userId;
 
             const data = await expenseService.create(parsed.data)
           
             return sendSuccess(res,"Expense created successfully", data);
-       
+
     }
     async getExpense(req: Request, res: Response) {
         const data = await expenseService.findAll();

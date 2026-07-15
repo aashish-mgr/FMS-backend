@@ -11,6 +11,8 @@ export const createIncomeSchema = z.object({
   referenceNumber: z.string().optional(),
   invoiceNumber: z.string().optional(),
   description: z.string().optional(),
+  createdBy: z.string().uuid().optional(),
+  updatedBy: z.string().uuid().optional()
 });
 
 export const updateIncomeSchema = createIncomeSchema.partial();

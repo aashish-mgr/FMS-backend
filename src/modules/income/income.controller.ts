@@ -2,13 +2,21 @@ import { Request, Response } from "express";
 import incomeService from "./income.service";
 import { sendError,sendSuccess } from "../../utils/response";
 import { createIncomeSchema, updateIncomeSchema } from "./income.validation";
+import { AuthRequest } from "../../types/authTypes";
 
 class IncomeController {
-  async createIncome(req: Request, res: Response) {
+  async createIncome(req: AuthRequest, res: Response) {
     const parsed = createIncomeSchema.safeParse(req.body);
+    const userId = req.user?.id;
+    if (!userId) {
+      return sendError(res, "User authentication required");
+    }
+
     if (!parsed.success) {
       return sendError(res, "Please provide all the details");
     }
+
+    parsed.data.createdBy = userId;
 
     const data = await incomeService.create(parsed.data);
 
@@ -38,7 +46,7 @@ class IncomeController {
     return sendSuccess(res, "record fetched successfully", data);
   }
 
-  async updateIncome(req: Request, res: Response) {
+  async updateIncome(req: AuthRequest, res: Response) {
     const { id } = req.params;
     if (!id || Array.isArray(id)) {
       return sendError(res, "id is required");
@@ -48,6 +56,11 @@ class IncomeController {
     if (!parsed.success) {
       return sendError(res, "Invalid input");
     }
+    const userId = req.user?.id;
+         if (!userId) {
+                return sendError(res, "User authentication required")
+            }
+            parsed.data.updatedBy = userId;
 
     const updatedData = await incomeService.update(id as string, parsed.data);
     if (!updatedData) {

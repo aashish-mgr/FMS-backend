@@ -1,5 +1,6 @@
 import {z} from "zod"
 
+
 export const PAYMENT_METHODS = ["Cash", "Bank Transfer", "Cheque", "Esewa", "Khalti", "Other"] as const;
 
 export const createExpenseSchema = z.object({
@@ -10,6 +11,8 @@ export const createExpenseSchema = z.object({
   vendorName: z.string().optional(),
   billNumber: z.string().optional(),
   description: z.string().optional(),
+  createdBy: z.string().uuid().optional(),
+  updatedBy: z.string().uuid().optional()
 })
 
 export const updateExpenseSchema = createExpenseSchema.partial();
