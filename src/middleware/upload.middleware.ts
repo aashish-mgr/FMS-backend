@@ -1,15 +1,16 @@
 // src/middleware/upload.middleware.ts
 import multer from 'multer';
 import path from 'path';
-import { Request,Response,NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { envConfig } from '../config/env';
 import { AppError } from '../utils/AppError';
+import { AuthRequest } from '../types/authTypes';
 
 const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
 
 const fileFilter = (
-  req: Request,
+  req: any,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
@@ -28,11 +29,11 @@ export const uploadAttachment = multer({
   fileFilter,
   limits: {
     fileSize: envConfig.MAX_ATTACHMENT_SIZE_MB * 1024 * 1024,
-    files: 10, // SRS 13.1: no hard limit, but recommends 10 in UI
+    files: 10, 
   },
 });
 
-export const withEntityType = (type: string) => (req: Request, res: Response, next: NextFunction) => {
-  req.params.entityType = type;
+export const withEntityType = (type: 'income' | 'expense' | 'reminder') => (req: AuthRequest, res: Response, next: NextFunction) => {
+  req.entityType = type;
   next();
 };

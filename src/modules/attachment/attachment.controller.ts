@@ -6,14 +6,16 @@ import { AuthRequest } from '../../types/authTypes';
 
 export async function uploadHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const { entityType, entityId } = req.params as { entityType: any; entityId: string };
+     const entityType = req.entityType!;
+    const { entityId } = req.params;
     const files = req.files as Express.Multer.File[];
+    console.log('params:', req.params);
 
     if (!files?.length) {
       return res.status(400).json({ success: false, error: { code: 'NO_FILES', message: 'At least one file is required' } });
     }
 
-    const attachments = await attachmentService.uploadAttachments(entityType, entityId, files, req.user!.id);
+    const attachments = await attachmentService.uploadAttachments(entityType, entityId as string, files, req.user!.id);
     return res.status(201).json(sendSuccess(res,"uploaded attacment",attachments));
   } catch (err) {
     next(err);

@@ -4,7 +4,7 @@ import { getStorageService } from '../../providers/storage'; // unchanged
 // import { writeAuditLog } from '../../services/audit.service';
 import { AppError } from '../../utils/AppError';
 
-type EntityType = 'income' | 'expense' | 'reminder';
+export type EntityType = 'income' | 'expense' | 'reminder';
 
 export async function uploadAttachments(
   entityType: EntityType,

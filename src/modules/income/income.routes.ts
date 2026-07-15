@@ -16,6 +16,6 @@ router
   .patch(handleError(incomeController.updateIncome))
   .delete(handleError(incomeController.deleteIncome));
 
-  router.use('/:entityId/attachments', withEntityType('expense'), attachmentRoutes);
+  router.use('/:entityId/attachments', withEntityType('income'), attachmentRoutes);
 
 export default router;
