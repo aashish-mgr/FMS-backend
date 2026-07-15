@@ -4,12 +4,14 @@ import express from "express";
 
 const router = express.Router();
 
-router.route("/create").post(handleError(incomeController.createIncome));
-// NOTE: fixed the "/getALl" typo from the original incomeRoute.ts -> "/getAll".
-// Update any existing frontend calls if you were already using the old path.
-router.route("/getAll").get(handleError(incomeController.getIncome));
-router.route("/getSingle/:id").get(handleError(incomeController.getSingleIncome));
-router.route("/update/:id").patch(handleError(incomeController.updateIncome));
-router.route("/delete/:id").delete(handleError(incomeController.deleteIncome));
+router
+  .route("/")
+  .post(handleError(incomeController.createIncome))
+  .get(handleError(incomeController.getIncome));
+router
+  .route("/:id")
+  .get(handleError(incomeController.getSingleIncome))
+  .patch(handleError(incomeController.updateIncome))
+  .delete(handleError(incomeController.deleteIncome));
 
 export default router;
