@@ -7,6 +7,8 @@
 // call `auditService.log(...)` from income.service.ts (and any future
 // module's service) after each create/update/delete.
 
+import { prisma } from "../config/database";
+
 interface AuditLogInput {
   userId?: string | null;
   action: string; // e.g. "INCOME_CREATED"
@@ -17,8 +19,18 @@ interface AuditLogInput {
 }
 
 class AuditService {
-  async log(_input: AuditLogInput) {
-    // TODO: implement once an AuditLog model exists in prisma/schema.prisma.
+  async log(input: AuditLogInput) {
+     await prisma.auditLogs.create({
+      data: {
+        userId: input.userId ?? null,
+        action: input.action,
+        entityType: input.entityType,
+        entityId: input.entityId ?? null,
+        oldValues: input.oldValues ? JSON.parse(JSON.stringify(input.oldValues)) : null,
+        newValues: input.newValues ? JSON.parse(JSON.stringify(input.newValues)) : null,
+
+      }
+     })
     return;
   }
 }

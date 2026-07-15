@@ -106,8 +106,9 @@ model Expense {
   description                     String?         @db.VarChar(255)
   createdBy                       String?         @db.Uuid
   updatedBy                       String?         @db.Uuid
-  createdAt                       DateTime        @db.Timestamptz(6)
-  updatedAt                       DateTime        @db.Timestamptz(6)
+  createdAt                       DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt                       DateTime        @updatedAt @db.Timestamptz(6)
+  deletedAt                      DateTime?      @db.Timestamptz(6)
   users_expenses_createdByTousers User?           @relation("expenses_createdByTousers", fields: [createdBy], references: [id], onDelete: Cascade)
   expenseCategories               ExpenseCategory @relation(fields: [expenseCategoryId], references: [id], onDelete: Cascade)
   users_expenses_updatedByTousers User?           @relation("expenses_updatedByTousers", fields: [updatedBy], references: [id], onDelete: Cascade)
@@ -154,7 +155,7 @@ model AuditLogs {
   userId String? @db.Uuid
   action String @db.VarChar(100)
   entityType String @db.VarChar(50)
-  entityId String @db.Uuid
+  entityId String? @db.Uuid
   oldValues Json? @db.JsonB
   newValues Json? @db.JsonB
   ipAddress String? @db.Inet 
