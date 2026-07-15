@@ -23,10 +23,10 @@ class ExpenseController {
     async getExpense(req: Request, res: Response) {
         const data = await expenseService.findAll();
         if (!data) {
-         sendError(res,"income records not found")
+         sendError(res,"expense records not found")
         }
     
-        sendSuccess(res,"etched income records",data);
+        sendSuccess(res,"fetched expense records",data);
       }
     
       async getSingleExpense(req: Request, res: Response) {
