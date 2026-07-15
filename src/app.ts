@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import { connectDb } from "./config/database";
 import authRoute from "./modules/auth/auth.routes";
 import incomeRoute from "./modules/income/income.routes";
+import expenseRoute from "./modules/expense/expense.routes"
 import { globalErrorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -16,6 +17,7 @@ connectDb();
 
 app.use("/api/auth", authRoute);
 app.use("/api/income", incomeRoute);
+app.use("/api/expense",expenseRoute);
 
 // Registered last so it catches errors forwarded from every route above
 // (see src/middleware/errorHandler.ts). The original app.ts had no
