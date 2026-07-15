@@ -2,7 +2,11 @@ import { prisma } from "../../config/database";
 import { CreateIncomeInput, UpdateIncomeInput } from "./income.validation";
 import { httpError } from "../../utils/httpError";
 
-function removeUndefinedFields<T extends object>(data: T) {
+function removeUndefinedFields<T extends object>(data: T | null | undefined) {
+  if (!data || typeof data !== "object") {
+    return {} as { [K in keyof T]-?: Exclude<T[K], undefined> };
+  }
+
   return Object.fromEntries(
     Object.entries(data).filter(([, value]) => value !== undefined)
   ) as { [K in keyof T]-?: Exclude<T[K], undefined> };
@@ -13,7 +17,7 @@ function removeUndefinedFields<T extends object>(data: T) {
 class IncomeService {
   async create(data: CreateIncomeInput) {
     const existingCategory = await prisma.incomeCategory.findUnique({
-      where: { id: data.incomeCategoryId },
+      where: { id: data.incomeCategoryId as string },
       select: { id: true },
     });
 
@@ -45,12 +49,16 @@ class IncomeService {
     return prisma.income.findFirst({ where: { id, deletedAt: null } });
   }
 
-  async update(id: string, data: UpdateIncomeInput) {
-
+  async update(id: string, data: UpdateIncomeInput | null | undefined) {
     const existing = await this.findById(id);
     if (!existing) return null;
 
-    return prisma.income.update({ where: { id }, data: removeUndefinedFields(data) });
+    const sanitizedData = removeUndefinedFields(data);
+    if (Object.keys(sanitizedData).length === 0) {
+      return existing;
+    }
+
+    return prisma.income.update({ where: { id }, data: sanitizedData });
   }
 
   async softDelete(id: string) {

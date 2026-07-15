@@ -14,7 +14,7 @@ class ExpenseService {
     
        async create(data: CreateExpenseInput) {
            const existingCategory = await prisma.expenseCategory.findUnique({
-             where: { id: data.expenseCategoryId },
+             where: { id: data.expenseCategoryId as string},
              select: { id: true },
            });
        
@@ -60,7 +60,7 @@ class ExpenseService {
    const existing = prisma.expense.findFirst({where: {id}});
     if (!existing) return null;
 
-    return prisma.income.update({
+    return prisma.expense.update({
       where: { id },
       data: { deletedAt: new Date() },
     });

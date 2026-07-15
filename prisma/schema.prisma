@@ -108,7 +108,7 @@ model Expense {
   updatedBy                       String?         @db.Uuid
   createdAt                       DateTime        @default(now()) @db.Timestamptz(6)
   updatedAt                       DateTime        @updatedAt @db.Timestamptz(6)
-  deletedAt                      DateTime?      @db.Timestamptz(6)
+  deletedAt                       DateTime?       @db.Timestamptz(6)
   users_expenses_createdByTousers User?           @relation("expenses_createdByTousers", fields: [createdBy], references: [id], onDelete: Cascade)
   expenseCategories               ExpenseCategory @relation(fields: [expenseCategoryId], references: [id], onDelete: Cascade)
   users_expenses_updatedByTousers User?           @relation("expenses_updatedByTousers", fields: [updatedBy], references: [id], onDelete: Cascade)
