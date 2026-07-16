@@ -1,6 +1,3 @@
-// Small date-range helpers for the dashboard/report modules described in the
-// SRS (today / this week / this month / this year KPI cards). Not used yet
-// by auth or income, but scaffolded here since those modules will need it.
 
 export const startOfToday = () => {
   const d = new Date();
@@ -24,3 +21,27 @@ export const startOfYear = () => {
   const d = new Date();
   return new Date(d.getFullYear(), 0, 1);
 };
+
+export interface DateRange {
+  gte: Date;
+  lte: Date;
+}
+
+export function endOfToday(): Date {
+  const d = new Date();
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+export interface DateRange {
+  gte: Date;
+  lte: Date;
+}
+export function rangeFrom(start: Date): DateRange {
+  return { gte: start, lte: endOfToday() };
+}
+
+
+
+// export function rangeFrom(start: Date): DateRange {
+//   return { gte: start, lte: endOfToday() };
+// }
