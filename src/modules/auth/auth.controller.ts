@@ -2,14 +2,13 @@ import { Request, Response } from "express";
 import authService from "./auth.service";
 import { loginSchema } from "./auth.validation";
 import { REFRESH_TOKEN_COOKIE_MAX_AGE_MS } from "../../config/constants";
+import { sendError, sendSuccess } from "../../utils/response";
 
 class AuthController {
   async login(req: Request, res: Response) {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({
-        message: parsed.error.issues[0]?.message ?? "Invalid input",
-      });
+      return sendError(res,parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
     const { userEmail, userPassword } = parsed.data;
@@ -26,10 +25,22 @@ class AuthController {
       maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
-    return res.status(200).json({
-      message: "Login successful",
-      accessToken,
-    });
+   return sendSuccess(res,"login successful", accessToken);
+  }
+
+  async refresh(req: Request, res: Response ) {
+    const token = req.cookies?.refreshToken;
+    if(!token) {
+      return sendError(res, "token is required");
+    }
+
+    const accessToken = await authService.refresh(token);
+    return sendSuccess(res,"token refreshed successfully", accessToken);
+  }
+
+  async logout(req: Request,res: Response) {
+    res.clearCookie("refreshToken");
+    return sendSuccess(res,"logged out successfully");
   }
 }
 

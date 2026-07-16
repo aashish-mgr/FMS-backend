@@ -10,7 +10,7 @@ export class AppError extends Error {
     this.name = 'AppError';
     this.code = code;
     this.statusCode = statusCode;
-    this.isOperational = true; // distinguishes "expected" errors from bugs/crashes
+    this.isOperational = true; 
     this.details = details;
 
     Error.captureStackTrace(this, this.constructor);
