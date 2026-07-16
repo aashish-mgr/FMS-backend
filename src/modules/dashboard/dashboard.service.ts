@@ -11,7 +11,7 @@ import {
 
 const PRIORITY_RANK: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
 
-type Period = "daily" | "weekly" | "monthly" | "yearly";
+ type Period = "daily" | "weekly" | "monthly" | "yearly";
 
 function bucketKey(date: Date, period: Period): string {
   const d = dayjs(date);
@@ -21,7 +21,7 @@ function bucketKey(date: Date, period: Period): string {
     case "weekly":
       return d.startOf("week").format("YYYY-MM-DD");
     case "monthly":
-      return d.format("YYYY-MM");
+      return d.format("YYYY-MM"); 
     case "yearly":
       return d.format("YYYY");
   }
@@ -254,3 +254,5 @@ class DashboardService {
   });
 }
 }
+
+export default new DashboardService();
