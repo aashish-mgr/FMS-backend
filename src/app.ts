@@ -10,12 +10,16 @@ import remainderRoute from "./modules/remainder/reminder.routes"
 import categoryRoute from "./modules/category/category.routes"
 import dashboardRoute from "./modules/dashboard/dashboard.routes"
 import { globalErrorHandler } from "./middleware/errorHandler";
-
+import cors from 'cors'
 const app = express();
 dotenv.config();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+}))
 
 connectDb();
 
@@ -23,7 +27,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/income", incomeRoute);
 app.use("/api/expense",expenseRoute);
 app.use("/api/note",noteRoute);
-app.use("/api/remainder",remainderRoute);
+app.use("/api/reminder",remainderRoute);
 app.use("/api/category",categoryRoute);
 app.use("/api/dashboard",dashboardRoute);
 

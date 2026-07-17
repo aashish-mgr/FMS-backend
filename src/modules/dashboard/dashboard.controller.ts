@@ -22,7 +22,7 @@ class DashboardController {
         if(!data) {
             return sendError(res,"data not fetched");
         }
-        return sendSuccess(res,"Chart data fetched successfully");
+        return sendSuccess(res,"Chart data fetched successfully",data);
     }
 
     async getIncomeByCategory(req: Request,res: Response) {

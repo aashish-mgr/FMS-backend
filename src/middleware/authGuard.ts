@@ -23,7 +23,7 @@ export class AuthGuard {
 
       jwt.verify(accessToken, envConfig.jwtSecret, async (err: jwt.VerifyErrors | null, decoded: any) => {
         if (err) {
-          return res.status(400).json({
+          return res.status(401).json({
             message: "token couldn't be verified",
           });
         }

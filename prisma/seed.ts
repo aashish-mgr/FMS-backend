@@ -97,7 +97,6 @@ async function seedExpenseCategories() {
 async function seedAdmin() {
   const adminEmail = process.env.ADMIN_EMAIL as string;
   const adminPassword = process.env.ADMIN_PASSWORD as string;
-
   const existingUser = await prisma.user.findFirst({ where: { userEmail: adminEmail } });
 
   if (existingUser) {

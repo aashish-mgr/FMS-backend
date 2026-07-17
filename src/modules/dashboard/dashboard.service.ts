@@ -169,8 +169,8 @@ class DashboardService {
         select: { transactionDate: true, amount: true },
       }),
       prisma.expense.findMany({
-        where: { deletedAt: null, expenseDate: { gte: start, lte: end } },
-        select: { expenseDate: true, amount: true },
+        where: { deletedAt: null, transactionDate: { gte: start, lte: end } },
+        select: { transactionDate: true, amount: true },
       }),
     ]);
 
@@ -188,7 +188,7 @@ class DashboardService {
       }
     }
     for (const row of expenseRows) {
-      const monthIndex = dayjs(row.expenseDate).month();
+      const monthIndex = dayjs(row.transactionDate).month();
       const month = months[monthIndex];
       if (month) {
         month.expense += Number(row.amount);
@@ -245,7 +245,7 @@ class DashboardService {
   const in7Days = dayjs().add(7, 'day').endOf('day').toDate();
 
   const reminders = await prisma.remainder.findMany({
-    where: { status: 'PENDING', deletedAt: null, reminderDate: { gte: now, lte: in7Days } },
+    where: { status: 'PENDING', deletedAt: null, remainderDate: { gte: now, lte: in7Days } },
   });
 
   return reminders.sort((a, b) => {

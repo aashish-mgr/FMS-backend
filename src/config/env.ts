@@ -10,8 +10,8 @@ const envSchema = z.object({
   ADMIN_PASSWORD: z.string().min(1, "ADMIN_PASSWORD is required"),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   MAX_ATTACHMENT_SIZE_MB: z.coerce.number().default(10),
-STORAGE_PROVIDER: z.enum(['local', 'cloudinary']).default('local'),
-LOCAL_UPLOAD_PATH: z.string().default('./uploads'),
+  STORAGE_PROVIDER: z.enum(['local', 'cloudinary']).default('local'),
+  LOCAL_UPLOAD_PATH: z.string().default('./uploads'),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -43,7 +43,7 @@ class AuthService {
   async refresh (refreshToken: string) {
       jwt.verify(refreshToken,envConfig.jwtSecret,async (err: jwt.VerifyErrors | null, decoded: any) => {
               if (err) {
-                throw new AppError("UNAUTHORIZED", "refresh token is not valid")
+                throw new AppError("UNAUTHORIZED", "refresh token is not valid",401)
               }
               const user = await prisma.user.findFirst({where: {id: decoded?.id}});
               if(!user) {

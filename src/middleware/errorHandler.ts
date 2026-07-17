@@ -4,6 +4,8 @@ import { Request, Response, NextFunction } from "express";
 // route handler so a rejected promise is forwarded to Express's error
 // pipeline instead of crashing the process. Kept the same export name
 // (`handleError`) so existing route files don't need to change their imports.
+
+
 export type AsyncHandler = (req: Request, res: Response, next: NextFunction) => Promise<any>;
 
 const handleError = (fn: AsyncHandler) => {
@@ -29,6 +31,10 @@ const globalErrorHandler = (err: HttpError, req: Request, res: Response, next: N
   return res.status(err.statusCode ?? 500).json({
     message: err.message || "Error occured",
   });
+
+  
 };
+
+
 
 export { handleError, globalErrorHandler };

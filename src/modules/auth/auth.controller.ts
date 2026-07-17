@@ -17,7 +17,7 @@ class AuthController {
     // credentials; the route wraps this controller in `handleError`, which
     // forwards it to the global error handler — reproducing the exact same
     // { message } responses the Sequelize version returned inline.
-    const { accessToken, refreshToken } = await authService.login(userEmail, userPassword);
+    const { accessToken, refreshToken,user } = await authService.login(userEmail, userPassword);
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -25,7 +25,7 @@ class AuthController {
       maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
-   return sendSuccess(res,"login successful", accessToken);
+   return sendSuccess(res,"login successful", {accessToken,user});
   }
 
   async refresh(req: Request, res: Response ) {

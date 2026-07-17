@@ -8,9 +8,9 @@ const router = express.Router();
 
 router.route("/kpis").get(authGuard.isAuthenticated,handleError(dashboardController.getKpis));
 router.route("/income-expense-chart").get(authGuard.isAuthenticated,handleError(dashboardController.getIncomeExpenseChart));
-router.route("/income-by-category").get(authGuard.isAuthenticated,handleError(dashboardController.getIncomeByCategory));
-router.route("/expense-by-category").get(authGuard.isAuthenticated,handleError(dashboardController.getExpenseByCategory));
-router.route("/cash-flow").get(authGuard.isAuthenticated,handleError(dashboardController.getMonthlyCashFlow));
+router.route("/income-by-category/:from/:to").get(authGuard.isAuthenticated,handleError(dashboardController.getIncomeByCategory));
+router.route("/expense-by-category/:from/:to").get(authGuard.isAuthenticated,handleError(dashboardController.getExpenseByCategory));
+router.route("/cash-flow/:year").get(authGuard.isAuthenticated,handleError(dashboardController.getMonthlyCashFlow));
 router.route("/recent-transactions").get(authGuard.isAuthenticated,handleError(dashboardController.getRecentTransactions));
 router.route("/upcoming-reminders").get(authGuard.isAuthenticated,handleError(dashboardController.getUpcomingRemainders));
 
