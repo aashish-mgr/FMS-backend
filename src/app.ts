@@ -9,6 +9,7 @@ import noteRoute from "./modules/note/note.routes"
 import remainderRoute from "./modules/remainder/reminder.routes"
 import categoryRoute from "./modules/category/category.routes"
 import dashboardRoute from "./modules/dashboard/dashboard.routes"
+import reportRoute from "./modules/report/report.routes"
 import { globalErrorHandler } from "./middleware/errorHandler";
 import cors from 'cors'
 const app = express();
@@ -30,6 +31,7 @@ app.use("/api/note",noteRoute);
 app.use("/api/reminder",remainderRoute);
 app.use("/api/category",categoryRoute);
 app.use("/api/dashboard",dashboardRoute);
+app.use("/api/report",reportRoute);
 
 // Registered last so it catches errors forwarded from every route above
 // (see src/middleware/errorHandler.ts). The original app.ts had no
