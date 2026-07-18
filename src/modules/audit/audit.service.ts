@@ -32,9 +32,9 @@ class AuditService {
     ];
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
-      select: { id: true, fullName: true },
+      select: { id: true , userName: true },
     });
-    const userMap = new Map(users.map((u) => [u.id, u.fullName]));
+    const userMap = new Map(users.map((u) => [u.id, u.userName]));
 
     return {
       records: records.map((r) => ({
