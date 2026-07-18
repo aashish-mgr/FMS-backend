@@ -6,6 +6,7 @@ import { ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN } from "../../config/
 import { httpError } from "../../utils/httpError";
 import { AppError } from "../../utils/AppError";
 import { User } from "@prisma/client";
+import { writeLog } from "../../services/audit.service";
 
  function generateAccessToken(user: User): string {
   return jwt.sign(
@@ -26,6 +27,7 @@ class AuthService {
 
     const isPasswordValid = await bcrypt.compare(userPassword, user.userPassword);
     if (!isPasswordValid) {
+      await writeLog({ userId: user.id ?? null, action: "USER_LOGIN_FAILED", entityType: "user"});
       throw httpError("Invalid email or password", 400);
     }
 

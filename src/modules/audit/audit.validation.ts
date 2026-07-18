@@ -8,3 +8,5 @@ export const AuditSchema = z.object({
   from: z.string().optional(),
   to: z.string().optional(),
 });
+
+export type AuditSchemaInput = z.infer<typeof AuditSchema>

@@ -18,8 +18,8 @@ interface AuditLogInput {
   newValues?: unknown;
 }
 
-class AuditService {
-  async log(input: AuditLogInput) {
+
+  export async function writeLog(input: AuditLogInput) {
      await prisma.auditLogs.create({
       data: {
         userId: input.userId ?? null,
@@ -33,6 +33,6 @@ class AuditService {
      })
     return;
   }
-}
 
-export default new AuditService();
+
+

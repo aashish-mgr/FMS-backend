@@ -3,9 +3,10 @@ import * as reportService from "./report.service";
 import { generateIncomeCsv, generateExpenseCsv } from "../../services/export/csv.service";
 import { generateIncomeExcel, generateExpenseExcel } from "../../services/export/excel.service";
 import { generateIncomeExcelPdf, generateExpenseExcelPdf } from "../../services/export/pdf.service";
-
+import { writeLog } from "../../services/audit.service";
 import { sendSuccess } from "../../utils/response";
 import { AppError } from "../../utils/AppError";
+import { AuthRequest } from "../../types/authTypes";
 
 type Format = "json" | "pdf" | "excel" | "csv";
 
@@ -18,13 +19,13 @@ function parseFormat(raw: unknown): Format {
 }
 
 class reportController {
- async  incomeReport(req: Request, res: Response, next: NextFunction) {
+ async  incomeReport(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const { from, to, category_id, payment_method } = req.query as Record<string, string>;
     const format = parseFormat(req.query.format);
     const records = await reportService.getIncomeReport({ from, to, category_id, payment_method }  as any);
 
-  
+     await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "income_report", newValues: { format } });
 
     if (format === "json") return sendSuccess(res,"report fetched successfully",records);
 
@@ -52,13 +53,13 @@ class reportController {
   }
 }
 
-   async  expenseReport(req: Request, res: Response, next: NextFunction) {
+   async  expenseReport(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const { from, to, category_id, payment_method } = req.query as Record<string, string>;
     const format = parseFormat(req.query.format);
     const records = await reportService.getExpenseReport({ from, to, category_id, payment_method } as any);
 
-   
+    await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "expense_report", newValues: { format } });
 
     if (format === "json") return sendSuccess(res, "reports fetched successfully",records);
 
@@ -86,13 +87,13 @@ class reportController {
   }
 }
 
-  async profitLossReport(req: Request, res: Response, next: NextFunction) {
+  async profitLossReport(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const { from, to } = req.query as Record<string, string>;
     const result = await reportService.getProfitLossReport({ from, to } as any);
 
     
-
+     await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "profit_loss_report"});
     return sendSuccess(res, "report fetched successfully",result);
   } catch (err) {
     return next(err);

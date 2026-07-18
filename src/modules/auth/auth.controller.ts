@@ -3,6 +3,8 @@ import authService from "./auth.service";
 import { loginSchema } from "./auth.validation";
 import { REFRESH_TOKEN_COOKIE_MAX_AGE_MS } from "../../config/constants";
 import { sendError, sendSuccess } from "../../utils/response";
+import { writeLog } from "../../services/audit.service";
+import { AuthRequest } from "../../types/authTypes";
 
 class AuthController {
   async login(req: Request, res: Response) {
@@ -25,6 +27,8 @@ class AuthController {
       maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
+    await writeLog({ userId: user.id ?? null, action: "USER_LOGIN", entityType: "user"});
+
    return sendSuccess(res,"login successful", {accessToken,user});
   }
 
@@ -38,8 +42,9 @@ class AuthController {
     return sendSuccess(res,"token refreshed successfully", accessToken);
   }
 
-  async logout(req: Request,res: Response) {
+  async logout(req: AuthRequest,res: Response) {
     res.clearCookie("refreshToken");
+    await writeLog({ userId: req.user?.id ?? null, action: "USER_LOGOUT", entityType: "user"});
     return sendSuccess(res,"logged out successfully");
   }
 }
