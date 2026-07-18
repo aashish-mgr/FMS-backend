@@ -3,6 +3,7 @@ import { AuthRequest } from "../../types/authTypes";
 import { createExpenseSchema, updateExpenseSchema } from "./expense.validation";
 import { sendSuccess,sendError } from "../../utils/response";
 import expenseService from "./expense.service";
+import { writeLog } from "../../services/audit.service";
 
 
 class ExpenseController {
@@ -19,6 +20,7 @@ class ExpenseController {
             parsed.data.createdBy = userId;
 
             const data = await expenseService.create(parsed.data)
+            await writeLog({ userId: req.user?.id ?? null, action: "EXPENSE_CREATED", entityType: "expense",entityId: data.id,newValues: {data}});
           
             return sendSuccess(res,"Expense created successfully", data);
 
@@ -71,14 +73,14 @@ class ExpenseController {
         if (!updatedData) {
           return  sendError(res,"record not found");
         }
-    
+        await writeLog({ userId: req.user?.id ?? null, action: "EXPENSE_UPDATED", entityType: "expense",entityId: updatedData.id,newValues: {updatedData},oldValues: {data}});
         return sendSuccess(res,"record updated successfully", updatedData);
       }
     
       // Was left as an incomplete stub (`async deleteIncome` with no body) in the
       // original incomeController.ts — implemented here as a soft delete to match
       // the project's paranoid-mode pattern used everywhere else.
-      async deleteExpense(req: Request, res: Response) {
+      async deleteExpense(req: AuthRequest, res: Response) {
         const { id } = req.params;
         if (!id || Array.isArray(id)) {
          return  sendError(res,"id is required");
@@ -88,7 +90,7 @@ class ExpenseController {
         if (!deletedData) {
           return sendError(res,"record not found");
         }
-    
+       await writeLog({ userId: req.user?.id ?? null, action: "EXPENSE_DELETED", entityType: "expense",entityId: deletedData.id});
         return sendSuccess(res, "record deleted successfully", deletedData)
       }
 }

@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as attachmentService from './attachment.service';
 import { sendSuccess } from '../../utils/response';
 import { AuthRequest } from '../../types/authTypes';
+import { writeLog } from '../../services/audit.service';
 
 export async function uploadHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
@@ -16,6 +17,7 @@ export async function uploadHandler(req: AuthRequest, res: Response, next: NextF
     }
 
     const attachments = await attachmentService.uploadAttachments(entityType, entityId as string, files, req.user!.id);
+    await writeLog({ userId: req.user?.id ?? null, action: "ATTACHMENT_UPLOADED", entityType: "attachment"});
     return res.status(201).json(sendSuccess(res,"uploaded attacment",attachments));
   } catch (err) {
     next(err);
@@ -25,6 +27,7 @@ export async function uploadHandler(req: AuthRequest, res: Response, next: NextF
 export async function deleteHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     await attachmentService.deleteAttachment(req.params.attachmentId as string, req.user!.id);
+    await writeLog({ userId: req.user?.id ?? null, action: "ATTACHMENT_DELETED", entityType: "attachment"});
     return res.status(204).send();
   } catch (err) {
     next(err);

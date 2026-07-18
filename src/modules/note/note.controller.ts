@@ -3,6 +3,7 @@ import { AuthRequest } from "../../types/authTypes";
 import { createNoteSchema, updateNoteSchema } from "./note.validation";
 import { sendError, sendSuccess } from "../../utils/response";
 import noteServices from "./note.services";
+import { writeLog } from "../../services/audit.service";
 
 
 class NoteController {
@@ -15,7 +16,7 @@ class NoteController {
        parsed.data.createdBy = userId as string;
 
        const data = await noteServices.create(parsed.data);
-
+       await writeLog({ userId: req.user?.id ?? null, action: "NOTE_CREATED", entityType: "note",entityId: data.id, newValues: {data}});
        return sendSuccess(res,"Note created successfully",data);
     }
 
@@ -53,10 +54,11 @@ class NoteController {
         if(!updatedData) {
             return sendError(res, "note not found");
         }
+        await writeLog({ userId: req.user?.id ?? null, action: "NOTE_UPDATED", entityType: "note",entityId: updatedData.id, newValues: {updatedData}});
         return sendSuccess(res,"Note updated successfully",updatedData);      
     }
     
-    async deleteNote(req: Request,res: Response) {
+    async deleteNote(req: AuthRequest,res: Response) {
         const {id} = req.params
         if(!id) {
             return sendError(res,"id is required")
@@ -65,6 +67,7 @@ class NoteController {
         if (!deletedData) {
       return sendError(res, "record not found");
     }
+    await writeLog({ userId: req.user?.id ?? null, action: "NOTE_DELETED", entityType: "note",entityId: deletedData.id});
         return sendSuccess(res,"Note deleted successfully", deletedData);
     }
 
