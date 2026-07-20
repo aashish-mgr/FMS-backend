@@ -19,7 +19,10 @@ class AuthService {
   async login(userEmail: string, userPassword: string) {
     const user = await prisma.user.findFirst({
       where: { userEmail, deletedAt: null },
-    });
+      include: {
+        userRoles: true
+      }
+    },);
 
     if (!user) {
       throw httpError("user not found", 400);

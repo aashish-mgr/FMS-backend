@@ -20,7 +20,7 @@ class AuthController {
     // forwards it to the global error handler — reproducing the exact same
     // { message } responses the Sequelize version returned inline.
     const { accessToken, refreshToken,user } = await authService.login(userEmail, userPassword);
-
+``
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       sameSite: "strict",

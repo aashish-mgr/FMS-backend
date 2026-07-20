@@ -109,6 +109,7 @@ async function seedAdmin() {
         await prisma.userRole.create({
           data: { userId: existingUser.id, roleId: accountantRole.id },
         });
+        console.log("role seeded")
       }
     }
     return;
@@ -118,28 +119,26 @@ async function seedAdmin() {
     throw new Error("ADMIN_PASSWORD env var is required");
   }
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       userName: "admin",
       userEmail: adminEmail,
       userPassword: bcrypt.hashSync(adminPassword, 10),
     },
   });
+  const accountantRole = await prisma.role.findFirst({ where: { roleName: "accountant" } });
+      await prisma.userRole.create({
+          data: { userId: user.id, roleId: accountantRole?.id as string },
+        });
 }
 
 async function main() {
   try {
-    // NOTE: this order matches the original src/app.ts call order
-    // (adminSeeder -> incomeSeeder -> expenseSeeder -> roleSeeder). That means
-    // on a completely fresh database the very first seed run creates the admin
-    // user WITHOUT the "accountant" role attached, because the roles table is
-    // still empty at that point — the role only gets linked on a later re-run
-    // of this script, once roles exist. This mirrors the original behavior;
-    // see MIGRATION_NOTES.md for a suggested fix (seed roles first).
+    await seedRoles();
     await seedAdmin();
     await seedIncomeCategories();
     await seedExpenseCategories();
-    await seedRoles();
+    
   } catch (error) {
     console.error("Error seeding database:", error);
     process.exitCode = 1;
