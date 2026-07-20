@@ -27,6 +27,15 @@ function bucketKey(date: Date, period: Period): string {
   }
 }
 
+function bucketLabel(key: string, period: Period, weekIndex: number): string {
+  switch (period) {
+    case 'daily': return dayjs(key).format('ddd');           // Sun, Mon, Tue...
+    case 'weekly': return `Wk ${weekIndex}`;                  // Wk 1, Wk 2...
+    case 'monthly': return dayjs(`${key}-01`).format('MMM');  // Jan, Feb...
+    case 'yearly': return key;                                // 2025, 2026...
+  }
+}
+
 class DashboardService {
   async sumOfIncome(range: DateRange) {
     const result = await prisma.income.aggregate({
@@ -99,8 +108,9 @@ class DashboardService {
 
     return Array.from(buckets.entries())
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([bucket, { income, expense }]) => ({
+      .map(([bucket, { income, expense }], index) => ({
         bucket,
+        label: bucketLabel(bucket, period, index + 1),
         income,
         expense,
         profit: income - expense,
