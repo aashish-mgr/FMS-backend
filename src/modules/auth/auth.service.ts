@@ -20,7 +20,7 @@ class AuthService {
     const user = await prisma.user.findFirst({
       where: { userEmail, deletedAt: null },
       include: {
-        userRoles: true
+        userRoles: {include: {roles: true}}
       }
     },);
 

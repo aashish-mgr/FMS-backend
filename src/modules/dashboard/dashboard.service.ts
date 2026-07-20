@@ -176,6 +176,7 @@ class DashboardService {
 
     const months = Array.from({ length: 12 }, (_, i) => ({
       month: i + 1,
+      label: dayjs(`${year}-${i + 1}-01`).format('MMM'),
       income: 0,
       expense: 0,
     }));
