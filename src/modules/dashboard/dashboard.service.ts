@@ -95,7 +95,7 @@ class DashboardService {
     for (const row of incomeRows) {
       const key = bucketKey(row.transactionDate, period);
       const entry = buckets.get(key) ?? { income: 0, expense: 0 };
-      entry.expense += Number(row.amount);
+      entry.income += Number(row.amount);
       buckets.set(key, entry);
     }
 
