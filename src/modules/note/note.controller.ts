@@ -74,7 +74,7 @@ class NoteController {
     async togglePin(req: Request, res: Response) {
         const {id} = req.params;
         const {isPinned} = req.body;
-        if(!id || !isPinned) {
+        if(!id || (isPinned === null)) {
             return sendError(res,"provide all detail");
         }
         
@@ -85,7 +85,7 @@ class NoteController {
       async toggleArchive(req: Request, res: Response) {
         const {id} = req.params;
         const {isArchived} = req.body;
-        if(!id || !isArchived) {
+        if(!id || (isArchived === null)) {
             return sendError(res,"provide all detail");
         }
         
