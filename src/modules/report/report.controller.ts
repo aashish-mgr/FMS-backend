@@ -21,9 +21,9 @@ function parseFormat(raw: unknown): Format {
 class reportController {
  async  incomeReport(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const { from, to, category_id, payment_method } = req.query as Record<string, string>;
+    const { from, to, categoryId, paymentMethod } = req.query as Record<string, string>;
     const format = parseFormat(req.query.format);
-    const records = await reportService.getIncomeReport({ from, to, category_id, payment_method }  as any);
+    const records = await reportService.getIncomeReport({ from, to, categoryId, paymentMethod }  as any);
 
      await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "income_report", newValues: { format } });
 
@@ -55,9 +55,9 @@ class reportController {
 
    async  expenseReport(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const { from, to, category_id, payment_method } = req.query as Record<string, string>;
+    const { from, to, categoryId, paymentMethod } = req.query as Record<string, string>;
     const format = parseFormat(req.query.format);
-    const records = await reportService.getExpenseReport({ from, to, category_id, payment_method } as any);
+    const records = await reportService.getExpenseReport({ from, to, categoryId, paymentMethod } as any);
 
     await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "expense_report", newValues: { format } });
 

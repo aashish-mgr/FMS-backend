@@ -3,8 +3,8 @@ import { prisma } from "../../config/database";
 interface ReportFilters {
   from?: string;
   to?: string;
-  category_id?: string;
-  payment_method?: string;
+  categoryId?: string;
+  paymentMethod?: string;
 }
 
 export async function getIncomeReport(filters: ReportFilters) {
@@ -14,8 +14,8 @@ export async function getIncomeReport(filters: ReportFilters) {
     if (filters.from) where.transactionDate.gte = new Date(filters.from);
     if (filters.to) where.transactionDate.lte = new Date(filters.to);
   }
-  if (filters.category_id) where.incomeCategoryId = filters.category_id;
-  if (filters.payment_method) where.paymentMethod = filters.payment_method;
+  if (filters.categoryId) where.incomeCategoryId = filters.categoryId;
+  if (filters.paymentMethod) where.paymentMethod = filters.paymentMethod;
 
   return prisma.income.findMany({
     where,
@@ -31,8 +31,8 @@ export async function getExpenseReport(filters: ReportFilters) {
     if (filters.from) where.expenseDate.gte = new Date(filters.from);
     if (filters.to) where.expenseDate.lte = new Date(filters.to);
   }
-  if (filters.category_id) where.expenseCategoryId = filters.category_id;
-  if (filters.payment_method) where.paymentMethod = filters.payment_method;
+  if (filters.categoryId) where.expenseCategoryId = filters.categoryId;
+  if (filters.paymentMethod) where.paymentMethod = filters.paymentMethod;
 
   return prisma.expense.findMany({
     where,
