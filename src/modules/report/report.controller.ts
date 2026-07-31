@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import * as reportService from "./report.service";
 import { generateIncomeCsv, generateExpenseCsv } from "../../services/export/csv.service";
 import { generateIncomeExcel, generateExpenseExcel } from "../../services/export/excel.service";
-import { generateIncomeExcelPdf, generateExpenseExcelPdf } from "../../services/export/pdf.service";
+import { generateIncomeExcelPdf, generateExpenseExcelPdf,generateProfitLossPdf } from "../../services/export/pdf.service";
 import { writeLog } from "../../services/audit.service";
 import { sendSuccess } from "../../utils/response";
 import { AppError } from "../../utils/AppError";
@@ -90,8 +90,16 @@ class reportController {
   async profitLossReport(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const { from, to } = req.query as Record<string, string>;
+    const format = parseFormat(req.query.format);
     const result = await reportService.getProfitLossReport({ from, to } as any);
-
+    if(format === "pdf") {
+      const buffer = await generateProfitLossPdf(result, "Profit Loss Report");
+      res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=profit-loss-report.pdf");
+    return res.send(buffer);
+      
+    }
+    
     
      await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "profit_loss_report"});
     return sendSuccess(res, "report fetched successfully",result);
