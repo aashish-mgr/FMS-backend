@@ -3,6 +3,7 @@ import path from "path";
 
 // Bundled Roboto fonts ship inside the pdfmake package itself — no separate font files needed.
 const FONT_DIR = path.join(__dirname, "../../../node_modules/pdfmake/fonts/Roboto");
+pdfMake.setUrlAccessPolicy(() => false);
 
 let fontsConfigured = false;
 function ensureFontsConfigured() {
@@ -85,8 +86,8 @@ export async function generateExpenseExcelPdf(records: any[], title: string): Pr
       { text: "Amount", bold: true, alignment: "right" },
     ],
     ...records.map((r) => [
-      new Date(r.expenseDate).toLocaleDateString(),
-      r.category.name,
+      new Date(r.transactionDate).toLocaleDateString(),
+      r.expenseCategories.categoryName,
       r.vendorName ?? "—",
       r.paymentMethod,
       { text: formatNPR(Number(r.amount)), alignment: "right" },
