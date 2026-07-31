@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as reportService from "./report.service";
-import { generateIncomeCsv, generateExpenseCsv } from "../../services/export/csv.service";
-import { generateIncomeExcel, generateExpenseExcel } from "../../services/export/excel.service";
+import { generateIncomeCsv, generateExpenseCsv ,generateProfitLossCsv} from "../../services/export/csv.service";
+import { generateIncomeExcel, generateExpenseExcel,generateProfitLossExcel } from "../../services/export/excel.service";
 import { generateIncomeExcelPdf, generateExpenseExcelPdf,generateProfitLossPdf } from "../../services/export/pdf.service";
 import { writeLog } from "../../services/audit.service";
 import { sendSuccess } from "../../utils/response";
@@ -92,17 +92,31 @@ class reportController {
     const { from, to } = req.query as Record<string, string>;
     const format = parseFormat(req.query.format);
     const result = await reportService.getProfitLossReport({ from, to } as any);
-    if(format === "pdf") {
+
+     await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "profit_loss_report"});
+     if (format === "json") return sendSuccess(res, "reports fetched successfully",result);
+
+    if (format === "csv") {
+      const csv = generateProfitLossCsv(result);
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=profit-loss-report.csv");
+      return res.send(csv);
+    }
+
+    if (format === "excel") {
+      const buffer = await generateProfitLossExcel(result);
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", "attachment; filename=profit-loss-report.xlsx");
+      return res.send(buffer);
+    }
+ 
       const buffer = await generateProfitLossPdf(result, "Profit Loss Report");
       res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=profit-loss-report.pdf");
     return res.send(buffer);
       
-    }
     
     
-     await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "profit_loss_report"});
-    return sendSuccess(res, "report fetched successfully",result);
   } catch (err) {
     return next(err);
   }

@@ -25,3 +25,26 @@ export function generateExpenseCsv(records: any[]): string {
     { header: true }
   );
 }
+
+export function generateProfitLossCsv(report: {
+  totalIncome: number;
+  totalExpense: number;
+  netProfit: number;
+  incomeCount: number;
+  expenseCount: number;
+}): string {
+  const { totalIncome, totalExpense, netProfit, incomeCount, expenseCount } = report;
+
+  return stringify(
+    [
+      { Metric: "Total Income", Transactions: incomeCount, Amount: totalIncome.toFixed(2) },
+      { Metric: "Total Expense", Transactions: expenseCount, Amount: totalExpense.toFixed(2) },
+      {
+        Metric: netProfit < 0 ? "Net Loss" : "Net Profit",
+        Transactions: "",
+        Amount: netProfit.toFixed(2),
+      },
+    ],
+    { header: true }
+  );
+}

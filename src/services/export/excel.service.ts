@@ -61,3 +61,39 @@ export async function generateExpenseExcel(records: any[]): Promise<Buffer> {
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
 }
+
+export async function generateProfitLossExcel(report: {
+  totalIncome: number;
+  totalExpense: number;
+  netProfit: number;
+  incomeCount: number;
+  expenseCount: number;
+}): Promise<Buffer> {
+  const { totalIncome, totalExpense, netProfit, incomeCount, expenseCount } = report;
+
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Profit & Loss");
+
+  sheet.columns = [
+    { header: "Metric", key: "metric", width: 20 },
+    { header: "Transactions", key: "transactions", width: 16 },
+    { header: "Amount (NPR)", key: "amount", width: 18 },
+  ];
+  sheet.getRow(1).font = { bold: true };
+
+  sheet.addRow({ metric: "Total Income", transactions: incomeCount, amount: totalIncome });
+  sheet.addRow({ metric: "Total Expense", transactions: expenseCount, amount: totalExpense });
+
+  const netRow = sheet.addRow({
+    metric: netProfit < 0 ? "Net Loss" : "Net Profit",
+    transactions: "",
+    amount: netProfit,
+  });
+  netRow.font = {
+    bold: true,
+    color: { argb: netProfit < 0 ? "FFDC2626" : "FF16A34A" },
+  };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}
