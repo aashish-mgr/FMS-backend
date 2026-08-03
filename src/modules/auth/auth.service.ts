@@ -46,20 +46,22 @@ class AuthService {
   }
   
   async refresh (refreshToken: string) {
-      jwt.verify(refreshToken,envConfig.jwtSecret,async (err: jwt.VerifyErrors | null, decoded: any) => {
-              if (err) {
-               throw new AppError("UNAUTHORIZED", "refresh token is not valid",401)
-              }
-              const user = await prisma.user.findFirst({where: {id: decoded?.id}});
-              if(!user) {
-                throw new AppError("UNAUTHORIZED", "user no longer exists")
-              }
-
-              const accessToken = generateAccessToken(user);
-              return accessToken;
-            })
-            
+    return new Promise<string>((resolve, reject) => {
+      jwt.verify(refreshToken, envConfig.jwtSecret, async (err: jwt.VerifyErrors | null, decoded: any) => {
+        if (err) {
+          reject(new AppError("UNAUTHORIZED", "refresh token is not valid", 401));
+        }
+        const user = await prisma.user.findFirst({where: {id: decoded?.id}});
+        if(!user) {
+          reject(new AppError("UNAUTHORIZED", "user no longer exists"));
+          return;
+        }
+        const accessToken = generateAccessToken(user);
+        resolve(accessToken);
+      });
+    });
   }
+  
 
 
 }

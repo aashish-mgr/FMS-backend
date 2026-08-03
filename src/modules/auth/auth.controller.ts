@@ -39,7 +39,7 @@ class AuthController {
     }
 
     const accessToken = await authService.refresh(token);
-    return sendSuccess(res,"token refreshed successfully", accessToken);
+    return sendSuccess(res,"token refreshed successfully", {accessToken} );
   }
 
   async logout(req: AuthRequest,res: Response) {
