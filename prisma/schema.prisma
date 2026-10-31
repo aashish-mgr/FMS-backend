@@ -7,14 +7,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TenantStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+model Tenant {
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String       @db.VarChar(255)
+  slug        String       @unique @db.VarChar(100)
+  status      TenantStatus @default(TRIAL)
+  plan        String       @default("free") @db.VarChar(50)
+  trialEndsAt DateTime?    @db.Timestamptz(6)
+  settings    Json?        @db.JsonB
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+  deletedAt   DateTime?    @db.Timestamptz(6)
+
+  users             User[]
+  incomeCategories  IncomeCategory[]
+  expenseCategories ExpenseCategory[]
+  incomes           Income[]
+  expenses          Expense[]
+  notes             Note[]
+  remainders        Remainder[]
+  auditLogs         AuditLogs[]
+  attachments       Attachment[]
+
+  @@map("tenants")
+}
+
 model User {
   id                                 String       @id @default(uuid()) @db.Uuid
+  tenantId                           String       @db.Uuid
   userName                           String       @db.VarChar(255)
-  userEmail                          String       @db.VarChar(255)
+  userEmail                          String       @unique @db.VarChar(255)
   userPassword                       String       @db.VarChar(255)
   createdAt                          DateTime     @default(now()) @db.Timestamptz(6)
   updatedAt                          DateTime     @updatedAt @db.Timestamptz(6)
   deletedAt                          DateTime?    @db.Timestamptz(6)
+  tenant                             Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   expenses_expenses_createdByTousers Expense[]    @relation("expenses_createdByTousers")
   expenses_expenses_updatedByTousers Expense[]    @relation("expenses_updatedByTousers")
   incomes_incomes_createdByTousers   Income[]     @relation("incomes_createdByTousers")
@@ -24,6 +58,7 @@ model User {
   userRoles                          UserRole[]
   attachments                        Attachment[]
 
+  @@index([tenantId])
   @@map("users")
 }
 
@@ -51,32 +86,40 @@ model UserRole {
 }
 
 model IncomeCategory {
-  id                  String   @id @default(uuid()) @db.Uuid
-  categoryName        String   @db.VarChar(255)
-  categoryDescription String   @db.VarChar(255)
-  createdAt           DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt           DateTime @updatedAt @db.Timestamptz(6)
-  deletedAt                      DateTime?      @db.Timestamptz(6)
+  id                  String    @id @default(uuid()) @db.Uuid
+  tenantId            String    @db.Uuid
+  categoryName        String    @db.VarChar(255)
+  categoryDescription String    @db.VarChar(255)
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @db.Timestamptz(6)
+  deletedAt           DateTime? @db.Timestamptz(6)
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   incomes             Income[]
 
+  @@unique([tenantId, categoryName])
+  @@index([tenantId, deletedAt])
   @@map("incomeCategories")
 }
 
 model ExpenseCategory {
   id                  String    @id @default(uuid()) @db.Uuid
+  tenantId            String    @db.Uuid
   categoryName        String    @db.VarChar(255)
   categoryDescription String    @db.VarChar(255)
   createdAt           DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt           DateTime  @updatedAt @db.Timestamptz(6)
-  deletedAt                      DateTime?      @db.Timestamptz(6)
+  deletedAt           DateTime? @db.Timestamptz(6)
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   expenses            Expense[]
-  
 
+  @@unique([tenantId, categoryName])
+  @@index([tenantId, deletedAt])
   @@map("expenseCategories")
 }
 
 model Income {
   id                             String         @id @default(uuid()) @db.Uuid
+  tenantId                       String         @db.Uuid
   transactionDate                DateTime       @db.Timestamptz(6)
   amount                         Decimal        @db.Decimal(15, 2)
   incomeCategoryId               String         @db.Uuid
@@ -91,15 +134,19 @@ model Income {
   createdAt                      DateTime       @default(now()) @db.Timestamptz(6)
   updatedAt                      DateTime       @updatedAt @db.Timestamptz(6)
   deletedAt                      DateTime?      @db.Timestamptz(6)
+  tenant                         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   users_incomes_createdByTousers User?          @relation("incomes_createdByTousers", fields: [createdBy], references: [id], onDelete: Cascade)
   incomeCategories               IncomeCategory @relation(fields: [incomeCategoryId], references: [id], onDelete: Cascade)
   users_incomes_updatedByTousers User?          @relation("incomes_updatedByTousers", fields: [updatedBy], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, deletedAt])
+  @@index([tenantId, transactionDate])
   @@map("incomes")
 }
 
 model Expense {
   id                              String          @id @default(uuid()) @db.Uuid
+  tenantId                        String          @db.Uuid
   transactionDate                 DateTime        @db.Timestamptz(6)
   amount                          Decimal         @db.Decimal(15, 2)
   expenseCategoryId               String          @db.Uuid
@@ -112,15 +159,19 @@ model Expense {
   createdAt                       DateTime        @default(now()) @db.Timestamptz(6)
   updatedAt                       DateTime        @updatedAt @db.Timestamptz(6)
   deletedAt                       DateTime?       @db.Timestamptz(6)
+  tenant                          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   users_expenses_createdByTousers User?           @relation("expenses_createdByTousers", fields: [createdBy], references: [id], onDelete: Cascade)
   expenseCategories               ExpenseCategory @relation(fields: [expenseCategoryId], references: [id], onDelete: Cascade)
   users_expenses_updatedByTousers User?           @relation("expenses_updatedByTousers", fields: [updatedBy], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, deletedAt])
+  @@index([tenantId, transactionDate])
   @@map("expenses")
 }
 
 model Note {
   id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @db.Uuid
   title       String    @db.VarChar(255)
   description String    @db.VarChar(255)
   colorLabel  String?   @db.VarChar(255)
@@ -130,13 +181,16 @@ model Note {
   createdAt   DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
   deletedAt   DateTime? @db.Timestamptz(6)
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   users       User?     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, deletedAt])
   @@map("notes")
 }
 
 model Remainder {
   id            String                   @id @default(uuid()) @db.Uuid
+  tenantId      String                   @db.Uuid
   title         String                   @db.VarChar(255)
   description   String?                  @db.VarChar(255)
   remainderDate DateTime                 @db.Timestamptz(6)
@@ -148,13 +202,16 @@ model Remainder {
   createdAt     DateTime                 @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime                 @updatedAt @db.Timestamptz(6)
   deletedAt     DateTime?                @db.Timestamptz(6)
+  tenant        Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   users         User?                    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, deletedAt])
   @@map("remainders")
 }
 
 model AuditLogs {
   id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String?  @db.Uuid
   userId     String?  @db.Uuid
   action     String   @db.VarChar(100)
   entityType String   @db.VarChar(50)
@@ -163,12 +220,15 @@ model AuditLogs {
   newValues  Json?    @db.JsonB
   ipAddress  String?  @db.Inet
   createdAt  DateTime @default(now()) @db.Timestamptz()
+  tenant     Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
+  @@index([tenantId, createdAt])
   @@map("auditlogs")
 }
 
 model Attachment {
   id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @db.Uuid
   entityType String    @db.VarChar(50)
   entityId   String    @db.Uuid
   fileName   String    @db.VarChar(255)
@@ -178,11 +238,13 @@ model Attachment {
   storageUrl String    @db.Text
   provider   String    @db.VarChar(50)
   uploadedBy String    @db.Uuid
-  uploader   User      @relation(fields: [uploadedBy], references: [id])
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
   deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  uploader   User      @relation(fields: [uploadedBy], references: [id])
 
-  @@index([entityType, entityId])
+  @@index([tenantId, entityType, entityId])
+  @@index([tenantId, deletedAt])
   @@index([deletedAt])
   @@map("attachments")
 }
