@@ -10,7 +10,12 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
-import { ROLES } from "../src/config/constants";
+import {
+  DEFAULT_TENANT_ID,
+  DEFAULT_TENANT_NAME,
+  DEFAULT_TENANT_SLUG,
+  ROLES,
+} from "../src/config/constants";
 
 dotenv.config();
 
@@ -71,32 +76,65 @@ const expenseCategories = [
 ];
 
 async function seedRoles() {
-  const existingRoles = await prisma.role.findMany();
-  if (existingRoles.length !== 0) return;
-
-  await prisma.role.createMany({ data: ROLES.map((roleName) => ({ roleName })) });
+  for (const roleName of ROLES) {
+    const existing = await prisma.role.findFirst({ where: { roleName } });
+    if (!existing) {
+      await prisma.role.create({ data: { roleName } });
+    }
+  }
   console.log("Roles seeded successfully");
 }
 
-async function seedIncomeCategories() {
-  const existing = await prisma.incomeCategory.findMany();
-  if (existing.length !== 0) return;
+async function ensureDefaultTenant() {
+  const existing = await prisma.tenant.findFirst({
+    where: {
+      OR: [{ id: DEFAULT_TENANT_ID }, { slug: DEFAULT_TENANT_SLUG }],
+    },
+  });
 
-  await prisma.incomeCategory.createMany({ data: incomeCategories });
+  if (existing) return existing;
+
+  const tenant = await prisma.tenant.create({
+    data: {
+      id: DEFAULT_TENANT_ID,
+      name: DEFAULT_TENANT_NAME,
+      slug: DEFAULT_TENANT_SLUG,
+      status: "ACTIVE",
+      plan: "free",
+      settings: { currency: "NPR", timezone: "Asia/Kathmandu" },
+    },
+  });
+
+  console.log("Default tenant created");
+  return tenant;
+}
+
+async function seedIncomeCategories(tenantId: string) {
+  const existing = await prisma.incomeCategory.findFirst({ where: { tenantId } });
+  if (existing) return;
+
+  await prisma.incomeCategory.createMany({
+    data: incomeCategories.map((category) => ({ ...category, tenantId })),
+  });
   console.log("income category seeded successfully");
 }
 
-async function seedExpenseCategories() {
-  const existing = await prisma.expenseCategory.findMany();
-  if (existing.length !== 0) return;
+async function seedExpenseCategories(tenantId: string) {
+  const existing = await prisma.expenseCategory.findFirst({ where: { tenantId } });
+  if (existing) return;
 
-  await prisma.expenseCategory.createMany({ data: expenseCategories });
+  await prisma.expenseCategory.createMany({
+    data: expenseCategories.map((category) => ({ ...category, tenantId })),
+  });
   console.log("expense category seeded successfully");
 }
 
-async function seedAdmin() {
-  const adminEmail = process.env.ADMIN_EMAIL as string;
-  const adminPassword = process.env.ADMIN_PASSWORD as string;
+async function seedAdmin(tenantId: string) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminEmail) {
+    throw new Error("ADMIN_EMAIL env var is required");
+  }
   const existingUser = await prisma.user.findFirst({ where: { userEmail: adminEmail } });
 
   if (existingUser) {
@@ -121,23 +159,28 @@ async function seedAdmin() {
 
   const user = await prisma.user.create({
     data: {
+      tenantId,
       userName: "admin",
       userEmail: adminEmail,
       userPassword: bcrypt.hashSync(adminPassword, 10),
     },
   });
   const accountantRole = await prisma.role.findFirst({ where: { roleName: "accountant" } });
-      await prisma.userRole.create({
-          data: { userId: user.id, roleId: accountantRole?.id as string },
-        });
+  if (!accountantRole) {
+    throw new Error("accountant role is required before seeding the admin user");
+  }
+  await prisma.userRole.create({
+    data: { userId: user.id, roleId: accountantRole.id },
+  });
 }
 
 async function main() {
   try {
+    const tenant = await ensureDefaultTenant();
     await seedRoles();
-    await seedAdmin();
-    await seedIncomeCategories();
-    await seedExpenseCategories();
+    await seedAdmin(tenant.id);
+    await seedIncomeCategories(tenant.id);
+    await seedExpenseCategories(tenant.id);
     
   } catch (error) {
     console.error("Error seeding database:", error);

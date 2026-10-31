@@ -37,9 +37,10 @@ function bucketLabel(key: string, period: Period, weekIndex: number): string {
 }
 
 class DashboardService {
-  async sumOfIncome(range: DateRange) {
+  async sumOfIncome(tenantId: string, range: DateRange) {
     const result = await prisma.income.aggregate({
       where: {
+        tenantId,
         deletedAt: null,
         transactionDate: { gte: range.gte, lte: range.lte },
       },
@@ -48,9 +49,10 @@ class DashboardService {
     return Number(result._sum.amount ?? 0);
   }
 
-  async sumOfExpense(range: DateRange) {
+  async sumOfExpense(tenantId: string, range: DateRange) {
     const result = await prisma.expense.aggregate({
       where: {
+        tenantId,
         deletedAt: null,
         transactionDate: { gte: range.gte, lte: range.lte },
       },
@@ -59,33 +61,33 @@ class DashboardService {
     return Number(result._sum.amount ?? 0);
   }
 
-  async periodKpis(range: DateRange) {
+  async periodKpis(tenantId: string, range: DateRange) {
     const [income, expense] = await Promise.all([
-      this.sumOfIncome(range),
-      this.sumOfExpense(range),
+      this.sumOfIncome(tenantId, range),
+      this.sumOfExpense(tenantId, range),
     ]);
     return { income, expense, profit: income - expense };
   }
 
-  async getAllKpis() {
+  async getAllKpis(tenantId: string) {
     const [today, week, month, year] = await Promise.all([
-      this.periodKpis(rangeFrom(startOfToday())),
-      this.periodKpis(rangeFrom(startOfWeek())),
-      this.periodKpis(rangeFrom(startOfMonth())),
-      this.periodKpis(rangeFrom(startOfYear())),
+      this.periodKpis(tenantId, rangeFrom(startOfToday())),
+      this.periodKpis(tenantId, rangeFrom(startOfWeek())),
+      this.periodKpis(tenantId, rangeFrom(startOfMonth())),
+      this.periodKpis(tenantId, rangeFrom(startOfYear())),
     ]);
 
     return { today, week, month, year };
   }
 
-  async getIncomeExpenseChart(period: Period) {
+  async getIncomeExpenseChart(tenantId: string, period: Period) {
     const [incomeRows, expenseRows] = await Promise.all([
       prisma.income.findMany({
-        where: { deletedAt: null },
+        where: { tenantId, deletedAt: null },
         select: { transactionDate: true, amount: true },
       }),
       prisma.expense.findMany({
-        where: { deletedAt: null },
+        where: { tenantId, deletedAt: null },
         select: { transactionDate: true, amount: true },
       }),
     ]);
@@ -117,15 +119,15 @@ class DashboardService {
       }));
   }
 
-  async getIncomeByCategory(from: Date, to: Date) {
+  async getIncomeByCategory(tenantId: string, from: Date, to: Date) {
     const rows = await prisma.income.groupBy({
       by: ["incomeCategoryId"],
-      where: { deletedAt: null, transactionDate: { gte: from, lte: to } },
+      where: { tenantId, deletedAt: null, transactionDate: { gte: from, lte: to } },
       _sum: { amount: true },
     });
 
     const categories = await prisma.incomeCategory.findMany({
-      where: { id: { in: rows.map((r) => r.incomeCategoryId) } },
+      where: { tenantId, id: { in: rows.map((r) => r.incomeCategoryId) } },
     });
 
     const total = rows.reduce((sum, r) => sum + Number(r._sum.amount ?? 0), 0);
@@ -143,15 +145,15 @@ class DashboardService {
     });
   }
 
-  async getExpenseByCategory(from: Date, to: Date) {
+  async getExpenseByCategory(tenantId: string, from: Date, to: Date) {
     const rows = await prisma.expense.groupBy({
       by: ["expenseCategoryId"],
-      where: { deletedAt: null, transactionDate: { gte: from, lte: to } },
+      where: { tenantId, deletedAt: null, transactionDate: { gte: from, lte: to } },
       _sum: { amount: true },
     });
 
     const categories = await prisma.expenseCategory.findMany({
-      where: { id: { in: rows.map((r) => r.expenseCategoryId) } },
+      where: { tenantId, id: { in: rows.map((r) => r.expenseCategoryId) } },
     });
 
     const total = rows.reduce((sum, r) => sum + Number(r._sum.amount ?? 0), 0);
@@ -169,17 +171,17 @@ class DashboardService {
     });
   }
 
-  async getMonthlyCashFlow(year: number) {
+  async getMonthlyCashFlow(tenantId: string, year: number) {
     const start = new Date(`${year}-01-01T00:00:00Z`);
     const end = new Date(`${year}-12-31T23:59:59Z`);
 
     const [incomeRows, expenseRows] = await Promise.all([
       prisma.income.findMany({
-        where: { deletedAt: null, transactionDate: { gte: start, lte: end } },
+        where: { tenantId, deletedAt: null, transactionDate: { gte: start, lte: end } },
         select: { transactionDate: true, amount: true },
       }),
       prisma.expense.findMany({
-        where: { deletedAt: null, transactionDate: { gte: start, lte: end } },
+        where: { tenantId, deletedAt: null, transactionDate: { gte: start, lte: end } },
         select: { transactionDate: true, amount: true },
       }),
     ]);
@@ -209,16 +211,16 @@ class DashboardService {
     return months.map((m) => ({ ...m, profit: m.income - m.expense }));
   }
 
-  async getRecentTransactions() {
+  async getRecentTransactions(tenantId: string) {
     const [income, expense] = await Promise.all([
       prisma.income.findMany({
-        where: { deletedAt: null },
+        where: { tenantId, deletedAt: null },
         orderBy: { transactionDate: "desc" },
         include: { incomeCategories: true },
         take: 20,
       }),
       prisma.expense.findMany({
-        where: { deletedAt: null },
+        where: { tenantId, deletedAt: null },
         orderBy: { transactionDate: "desc" },
         include: { expenseCategories: true },
         take: 20,
@@ -251,12 +253,12 @@ class DashboardService {
 
   
 
- async  getUpcomingReminders() {
+  async  getUpcomingReminders(tenantId: string) {
   const now = new Date();
   const in7Days = dayjs().add(7, 'day').endOf('day').toDate();
 
   const reminders = await prisma.remainder.findMany({
-    where: { status: 'PENDING', deletedAt: null, remainderDate: { gte: now, lte: in7Days } },
+    where: { tenantId, status: 'PENDING', deletedAt: null, remainderDate: { gte: now, lte: in7Days } },
   });
 
   return reminders.sort((a, b) => {

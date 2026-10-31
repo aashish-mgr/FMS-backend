@@ -1,10 +1,16 @@
 import { sendError, sendSuccess } from "../../utils/response";
 import categoryService from "./category.service";
-import { Request,Response } from "express";
+import { Response } from "express";
+import { AuthRequest } from "../../types/authTypes";
 
 class CategoryController {
-    async getIncomeCategories(req: Request,res:Response) {
-        const data = await categoryService.getIncomeCategory();
+    async getIncomeCategories(req: AuthRequest,res:Response) {
+        const tenantId = req.user?.tenantId;
+        if (!tenantId) {
+            return sendError(res, "User authentication required", 401);
+        }
+
+        const data = await categoryService.getIncomeCategory(tenantId);
         if(!data) {
             return sendError(res,"Categories not found");
         }
@@ -12,8 +18,13 @@ class CategoryController {
 
     }
 
-    async getExpenseCategories(req: Request,res: Response) {
-        const data = await categoryService.getExpenseCategory();
+    async getExpenseCategories(req: AuthRequest,res: Response) {
+        const tenantId = req.user?.tenantId;
+        if (!tenantId) {
+            return sendError(res, "User authentication required", 401);
+        }
+
+        const data = await categoryService.getExpenseCategory(tenantId);
         if(!data) {
             return sendError(res,"Categories not found");
         }

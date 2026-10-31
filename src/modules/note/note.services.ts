@@ -1,26 +1,29 @@
 import { prisma } from "../../config/database";
 import { CreateNoteInput, UpdateNoteInput } from "./note.validation";
-import { httpError } from "../../utils/httpError";
 import { removeUndefinedFields } from "../income/income.service";
 
 class NoteService {
-  async create(data: CreateNoteInput) {
-    return prisma.note.create({ data: removeUndefinedFields(data) });
+  async create(data: CreateNoteInput, tenantId: string) {
+    return prisma.note.create({
+      data: { ...removeUndefinedFields(data), tenantId },
+    });
   }
 
-  async findAll() {
-    return prisma.note.findMany({ where: { deletedAt: null } });
+  async findAll(tenantId: string) {
+    return prisma.note.findMany({ where: { tenantId, deletedAt: null } });
   }
 
-  async findById(id: string) {
-    return prisma.note.findFirst({ where: { id, deletedAt: null } });
+  async findById(id: string, tenantId: string) {
+    return prisma.note.findFirst({ where: { id, tenantId, deletedAt: null } });
   }
 
-  async update(id: string, data: UpdateNoteInput) {
-    const existing = await this.findById(id);
+  async update(id: string, tenantId: string, data: UpdateNoteInput) {
+    const existing = await this.findById(id, tenantId);
     if (!existing) return null;
 
     const sanitizedData = removeUndefinedFields(data);
+    // Ownership is assigned from the authenticated user, never from the body.
+    delete (sanitizedData as { createdBy?: unknown }).createdBy;
     if (Object.keys(sanitizedData).length === 0) {
       return existing;
     }
@@ -28,8 +31,8 @@ class NoteService {
     return prisma.note.update({ where: { id }, data: sanitizedData });
   }
 
-  async delete(id: string) {
-    const existing = await this.findById(id);
+  async delete(id: string, tenantId: string) {
+    const existing = await this.findById(id, tenantId);
     if (!existing) return null;
 
     return prisma.note.update({
@@ -38,15 +41,15 @@ class NoteService {
     });
   }
 
-  async togglePin(id: string, isPinned: boolean) {
-    const existing = await this.findById(id);
+  async togglePin(id: string, tenantId: string, isPinned: boolean) {
+    const existing = await this.findById(id, tenantId);
     if (!existing) return null;
 
     return prisma.note.update({ where: { id }, data: { isPinned } });
   }
 
-  async toggleArchive(id: string, isArchived: boolean) {
-    const existing = await this.findById(id);
+  async toggleArchive(id: string, tenantId: string, isArchived: boolean) {
+    const existing = await this.findById(id, tenantId);
     if (!existing) return null;
     return prisma.note.update({ where: { id }, data: { isArchived } });
   }

@@ -1,11 +1,13 @@
-import { Request } from "express";
-import { User } from "@prisma/client";
-import { EntityType } from "../modules/attachment/attachment.service";
+import type { Request } from "express";
+import type { Tenant, User } from "@prisma/client";
+import type { EntityType } from "../modules/attachment/attachment.service";
 
-// Was a hand-written UserDetails interface in the Sequelize version. Now
-// reuses Prisma's generated User type directly so it can never drift out of
-// sync with the schema.
+// The authenticated user is always loaded together with their workspace and
+// roles, so controllers can scope queries without re-reading the database.
 export interface AuthRequest extends Request {
   user?: User;
+  tenant?: Tenant;
+  tenantId?: string;
+  roles?: string[];
   entityType?: EntityType;
 }

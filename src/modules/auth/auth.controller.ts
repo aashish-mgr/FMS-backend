@@ -19,17 +19,23 @@ class AuthController {
     // credentials; the route wraps this controller in `handleError`, which
     // forwards it to the global error handler — reproducing the exact same
     // { message } responses the Sequelize version returned inline.
-    const { accessToken, refreshToken,user } = await authService.login(userEmail, userPassword);
-``
+    const { accessToken, refreshToken, user, tenant } = await authService.login(userEmail, userPassword);
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
       maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
-    await writeLog({ userId: user.id ?? null, action: "USER_LOGIN", entityType: "user"});
+    await writeLog({
+      tenantId: user.tenantId,
+      userId: user.id,
+      action: "USER_LOGIN",
+      entityType: "user",
+    });
 
-   return sendSuccess(res,"login successful", {accessToken,user});
+   return sendSuccess(res,"login successful", {accessToken,user,tenant});
   }
 
   async refresh(req: Request, res: Response ) {
@@ -44,7 +50,12 @@ class AuthController {
 
   async logout(req: AuthRequest,res: Response) {
     res.clearCookie("refreshToken");
-    await writeLog({ userId: req.user?.id ?? null, action: "USER_LOGOUT", entityType: "user"});
+    await writeLog({
+      tenantId: req.user?.tenantId ?? null,
+      userId: req.user?.id ?? null,
+      action: "USER_LOGOUT",
+      entityType: "user",
+    });
     return sendSuccess(res,"logged out successfully");
   }
 }

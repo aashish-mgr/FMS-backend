@@ -1,24 +1,44 @@
 // src/modules/attachment/attachment.controller.ts
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import * as attachmentService from './attachment.service';
-import { sendSuccess } from '../../utils/response';
+import { sendError, sendSuccess } from '../../utils/response';
 import { AuthRequest } from '../../types/authTypes';
 import { writeLog } from '../../services/audit.service';
 
 export async function uploadHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-     const entityType = req.entityType!;
+    const entityType = req.entityType!;
     const { entityId } = req.params;
     const files = req.files as Express.Multer.File[];
-    console.log('params:', req.params);
+    const tenantId = req.user?.tenantId;
+    const userId = req.user?.id;
 
-    if (!files?.length) {
-      return res.status(400).json({ success: false, error: { code: 'NO_FILES', message: 'At least one file is required' } });
+    if (!tenantId || !userId) {
+      return sendError(res, 'User authentication required', 401);
     }
 
-    const attachments = await attachmentService.uploadAttachments(entityType, entityId as string, files, req.user!.id);
-    await writeLog({ userId: req.user?.id ?? null, action: "ATTACHMENT_UPLOADED", entityType: "attachment"});
-    return res.status(201).json(sendSuccess(res,"uploaded attacment",attachments));
+    if (!entityId || Array.isArray(entityId)) {
+      return sendError(res, 'entityId is required');
+    }
+
+    if (!files?.length) {
+      return sendError(res, 'At least one file is required');
+    }
+
+    const attachments = await attachmentService.uploadAttachments(
+      tenantId,
+      entityType,
+      entityId,
+      files,
+      userId,
+    );
+    await writeLog({
+      tenantId,
+      userId,
+      action: "ATTACHMENT_UPLOADED",
+      entityType: "attachment",
+    });
+    return sendSuccess(res, 'uploaded attachment', attachments, 201);
   } catch (err) {
     next(err);
   }
@@ -26,8 +46,23 @@ export async function uploadHandler(req: AuthRequest, res: Response, next: NextF
 
 export async function deleteHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    await attachmentService.deleteAttachment(req.params.attachmentId as string, req.user!.id);
-    await writeLog({ userId: req.user?.id ?? null, action: "ATTACHMENT_DELETED", entityType: "attachment"});
+    const tenantId = req.user?.tenantId;
+    const userId = req.user?.id;
+    if (!tenantId || !userId) {
+      return sendError(res, 'User authentication required', 401);
+    }
+
+    await attachmentService.deleteAttachment(
+      tenantId,
+      req.params.attachmentId as string,
+      userId,
+    );
+    await writeLog({
+      tenantId,
+      userId,
+      action: "ATTACHMENT_DELETED",
+      entityType: "attachment",
+    });
     return res.status(204).send();
   } catch (err) {
     next(err);

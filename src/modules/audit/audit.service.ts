@@ -4,9 +4,9 @@ import { parsePagination, buildMeta } from "../../utils/pagination";
 import { Prisma } from "@prisma/client";
 
 class AuditService {
-  async listAudit(query: AuditSchemaInput) {
+  async listAudit(query: AuditSchemaInput, tenantId: string) {
     const { page, limit, skip, take } = parsePagination(query as string);
-    const where: Prisma.AuditLogsWhereInput = {};
+    const where: Prisma.AuditLogsWhereInput = { tenantId };
     if (query.action) where.action = query.action;
     if (query.entity_type) where.entityType = query.entity_type;
     if (query.from || query.to) {
@@ -31,7 +31,7 @@ class AuditService {
       ),
     ];
     const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
+      where: { tenantId, id: { in: userIds } },
       select: { id: true , userName: true },
     });
     const userMap = new Map(users.map((u) => [u.id, u.userName]));

@@ -3,6 +3,13 @@
 
 export const ROLES = ["admin", "superAdmin", "accountant"] as const;
 
+// The migration creates this workspace to own all pre-existing single-tenant
+// data. Keeping the values in one place lets the seed and onboarding code
+// agree on the same default.
+export const DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000001";
+export const DEFAULT_TENANT_SLUG = "default";
+export const DEFAULT_TENANT_NAME = "Default Workspace";
+
 export const ACCESS_TOKEN_EXPIRES_IN = "15m";
 export const REFRESH_TOKEN_EXPIRES_IN = "7d";
 export const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days

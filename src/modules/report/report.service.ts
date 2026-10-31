@@ -7,8 +7,8 @@ interface ReportFilters {
   paymentMethod?: string;
 }
 
-export async function getIncomeReport(filters: ReportFilters) {
-  const where: any = { deletedAt: null };
+export async function getIncomeReport(tenantId: string, filters: ReportFilters) {
+  const where: any = { tenantId, deletedAt: null };
   if (filters.from || filters.to) {
     where.transactionDate = {};
     if (filters.from) where.transactionDate.gte = new Date(filters.from);
@@ -24,12 +24,12 @@ export async function getIncomeReport(filters: ReportFilters) {
   });
 }
 
-export async function getExpenseReport(filters: ReportFilters) {
-  const where: any = { deletedAt: null };
+export async function getExpenseReport(tenantId: string, filters: ReportFilters) {
+  const where: any = { tenantId, deletedAt: null };
   if (filters.from || filters.to) {
-    where.expenseDate = {};
-    if (filters.from) where.expenseDate.gte = new Date(filters.from);
-    if (filters.to) where.expenseDate.lte = new Date(filters.to);
+    where.transactionDate = {};
+    if (filters.from) where.transactionDate.gte = new Date(filters.from);
+    if (filters.to) where.transactionDate.lte = new Date(filters.to);
   }
   if (filters.categoryId) where.expenseCategoryId = filters.categoryId;
   if (filters.paymentMethod) where.paymentMethod = filters.paymentMethod;
@@ -41,10 +41,10 @@ export async function getExpenseReport(filters: ReportFilters) {
   });
 }
 
-export async function getProfitLossReport(filters: ReportFilters) {
+export async function getProfitLossReport(tenantId: string, filters: ReportFilters) {
   const [incomes, expenses] = await Promise.all([
-    getIncomeReport(filters),
-    getExpenseReport(filters),
+    getIncomeReport(tenantId, filters),
+    getExpenseReport(tenantId, filters),
   ]);
 
   const totalIncome = incomes.reduce((sum, i) => sum + Number(i.amount), 0);

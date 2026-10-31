@@ -21,11 +21,14 @@ function parseFormat(raw: unknown): Format {
 class reportController {
  async  incomeReport(req: AuthRequest, res: Response, next: NextFunction) {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) throw new AppError("UNAUTHORIZED", "User authentication required", 401);
+
     const { from, to, categoryId, paymentMethod } = req.query as Record<string, string>;
     const format = parseFormat(req.query.format);
-    const records = await reportService.getIncomeReport({ from, to, categoryId, paymentMethod }  as any);
+    const records = await reportService.getIncomeReport(tenantId, { from, to, categoryId, paymentMethod }  as any);
 
-     await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "income_report", newValues: { format } });
+     await writeLog({ tenantId, userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "income_report", newValues: { format } });
 
     if (format === "json") return sendSuccess(res,"report fetched successfully",records);
 
@@ -55,11 +58,14 @@ class reportController {
 
    async  expenseReport(req: AuthRequest, res: Response, next: NextFunction) {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) throw new AppError("UNAUTHORIZED", "User authentication required", 401);
+
     const { from, to, categoryId, paymentMethod } = req.query as Record<string, string>;
     const format = parseFormat(req.query.format);
-    const records = await reportService.getExpenseReport({ from, to, categoryId, paymentMethod } as any);
+    const records = await reportService.getExpenseReport(tenantId, { from, to, categoryId, paymentMethod } as any);
 
-    await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "expense_report", newValues: { format } });
+    await writeLog({ tenantId, userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "expense_report", newValues: { format } });
 
     if (format === "json") return sendSuccess(res, "reports fetched successfully",records);
 
@@ -89,11 +95,14 @@ class reportController {
 
   async profitLossReport(req: AuthRequest, res: Response, next: NextFunction) {
   try {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) throw new AppError("UNAUTHORIZED", "User authentication required", 401);
+
     const { from, to } = req.query as Record<string, string>;
     const format = parseFormat(req.query.format);
-    const result = await reportService.getProfitLossReport({ from, to } as any);
+    const result = await reportService.getProfitLossReport(tenantId, { from, to } as any);
 
-     await writeLog({ userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "profit_loss_report"});
+     await writeLog({ tenantId, userId: req.user?.id ?? null, action: "REPORT_EXPORTED", entityType: "profit_loss_report"});
      if (format === "json") return sendSuccess(res, "reports fetched successfully",result);
 
     if (format === "csv") {

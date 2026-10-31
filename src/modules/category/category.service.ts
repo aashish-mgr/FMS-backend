@@ -1,16 +1,16 @@
 import {prisma} from "../../config/database"
 
 class CategoryService {
-    async getIncomeCategory() {
+    async getIncomeCategory(tenantId: string) {
        return prisma.incomeCategory.findMany({
-        where: {deletedAt: null}
+        where: {tenantId, deletedAt: null}
        });
 
     }
 
-    async getExpenseCategory() {
+    async getExpenseCategory(tenantId: string) {
         return prisma.expenseCategory.findMany({
-            where: {deletedAt: null}
+            where: {tenantId, deletedAt: null}
         });
     }
 }
