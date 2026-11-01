@@ -11,6 +11,7 @@ import categoryRoute from "./modules/category/category.routes"
 import dashboardRoute from "./modules/dashboard/dashboard.routes"
 import reportRoute from "./modules/report/report.routes"
 import auditRoute from "./modules/audit/audit.routes"
+import workspaceRoute from "./modules/workspace/workspace.routes"
 import { globalErrorHandler } from "./middleware/errorHandler";
 import cors from 'cors'
 const app = express();
@@ -34,6 +35,7 @@ app.use("/api/category",categoryRoute);
 app.use("/api/dashboard",dashboardRoute);
 app.use("/api/report",reportRoute);
 app.use("/api/audit-logs",auditRoute);
+app.use("/api/workspace", workspaceRoute);
 
 // Registered last so it catches errors forwarded from every route above
 // (see src/middleware/errorHandler.ts). The original app.ts had no

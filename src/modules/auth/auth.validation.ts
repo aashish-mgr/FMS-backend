@@ -6,3 +6,23 @@ export const loginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+
+export const registerSchema = z.object({
+  workspaceName: z
+    .string()
+    .trim()
+    .min(2, "workspaceName must be at least 2 characters")
+    .max(255, "workspaceName is too long"),
+  userName: z
+    .string()
+    .trim()
+    .min(1, "userName is required")
+    .max(255, "userName is too long"),
+  userEmail: z.string().trim().email("userEmail must be a valid email").max(255),
+  userPassword: z
+    .string()
+    .min(8, "userPassword must be at least 8 characters")
+    .max(72, "userPassword must be at most 72 characters"),
+});
+
+export type RegisterInput = z.infer<typeof registerSchema>;

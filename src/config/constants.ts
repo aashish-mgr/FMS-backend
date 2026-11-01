@@ -10,6 +10,13 @@ export const DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000001";
 export const DEFAULT_TENANT_SLUG = "default";
 export const DEFAULT_TENANT_NAME = "Default Workspace";
 
+// New workspaces and the backfilled default workspace start with these
+// settings. Kept here so seed and onboarding cannot drift apart.
+export const DEFAULT_WORKSPACE_SETTINGS = {
+  currency: "NPR",
+  timezone: "Asia/Kathmandu",
+};
+
 export const ACCESS_TOKEN_EXPIRES_IN = "15m";
 export const REFRESH_TOKEN_EXPIRES_IN = "7d";
 export const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days

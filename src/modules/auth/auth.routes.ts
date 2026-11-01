@@ -6,6 +6,7 @@ import authGuard from "../../middleware/authGuard";
 const router = express.Router();
 
 router.route("/login").post(handleError(authController.login));
+router.route("/register").post(handleError(authController.register));
 router.route("/refresh").post(handleError(authController.refresh));
 router.route("/logout").post(authGuard.isAuthenticated,handleError(authController.logout));
 
