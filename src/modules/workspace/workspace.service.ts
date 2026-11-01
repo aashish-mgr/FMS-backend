@@ -55,8 +55,9 @@ function getConstraintTarget(error: Prisma.PrismaClientKnownRequestError) {
 
 class WorkspaceService {
   async provisionWorkspace(input: ProvisionWorkspaceInput) {
+    const email = input.userEmail.trim().toLowerCase();
     const existingUser = await prisma.user.findFirst({
-      where: { userEmail: input.userEmail },
+      where: { userEmail: { equals: email, mode: "insensitive" } },
       select: { id: true },
     });
 
@@ -84,7 +85,7 @@ class WorkspaceService {
           data: {
             tenantId: tenant.id,
             userName: input.userName,
-            userEmail: input.userEmail,
+            userEmail: email,
             userPassword: passwordHash,
           },
         });

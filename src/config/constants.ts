@@ -3,6 +3,15 @@
 
 export const ROLES = ["admin", "superAdmin", "accountant"] as const;
 
+// Roles that can be assigned through workspace membership. `superAdmin` is a
+// platform-level role and must never be granted by a workspace admin.
+export const ASSIGNABLE_ROLES = ["admin", "accountant"] as const;
+export type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
+
+export const INVITATION_EXPIRES_IN_DAYS = 7;
+export const INVITATION_EXPIRES_IN_MS =
+  INVITATION_EXPIRES_IN_DAYS * 24 * 60 * 60 * 1000;
+
 // The migration creates this workspace to own all pre-existing single-tenant
 // data. Keeping the values in one place lets the seed and onboarding code
 // agree on the same default.

@@ -66,7 +66,10 @@ function buildSession(user: SessionUser) {
 class AuthService {
   async login(userEmail: string, userPassword: string) {
     const user = await prisma.user.findFirst({
-      where: { userEmail, deletedAt: null },
+      where: {
+        userEmail: { equals: userEmail, mode: "insensitive" },
+        deletedAt: null,
+      },
       include: {
         tenant: true,
         userRoles: { include: { roles: true } },

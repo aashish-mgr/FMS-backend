@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-  userEmail: z.string().min(1, "userEmail is required").email(),
+  userEmail: z
+    .string()
+    .trim()
+    .min(1, "userEmail is required")
+    .email()
+    .transform((value) => value.toLowerCase()),
   userPassword: z.string().min(1, "userPassword is required"),
 });
 
@@ -18,7 +23,12 @@ export const registerSchema = z.object({
     .trim()
     .min(1, "userName is required")
     .max(255, "userName is too long"),
-  userEmail: z.string().trim().email("userEmail must be a valid email").max(255),
+  userEmail: z
+    .string()
+    .trim()
+    .email("userEmail must be a valid email")
+    .max(255)
+    .transform((value) => value.toLowerCase()),
   userPassword: z
     .string()
     .min(8, "userPassword must be at least 8 characters")
@@ -26,3 +36,22 @@ export const registerSchema = z.object({
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const acceptInvitationSchema = z.object({
+  token: z
+    .string()
+    .trim()
+    .min(32, "invitation token is required")
+    .max(255, "invitation token is invalid"),
+  userName: z
+    .string()
+    .trim()
+    .min(1, "userName is required")
+    .max(255, "userName is too long"),
+  userPassword: z
+    .string()
+    .min(8, "userPassword must be at least 8 characters")
+    .max(72, "userPassword must be at most 72 characters"),
+});
+
+export type AcceptInvitationInput = z.infer<typeof acceptInvitationSchema>;

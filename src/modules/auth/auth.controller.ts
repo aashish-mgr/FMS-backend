@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import authService from "./auth.service";
-import { loginSchema, registerSchema } from "./auth.validation";
+import { acceptInvitationSchema, loginSchema, registerSchema } from "./auth.validation";
 import { REFRESH_TOKEN_COOKIE_MAX_AGE_MS } from "../../config/constants";
 import { sendError, sendSuccess } from "../../utils/response";
 import { writeLog } from "../../services/audit.service";
 import { AuthRequest } from "../../types/authTypes";
 import workspaceService from "../workspace/workspace.service";
+import invitationService from "../workspace/invitation.service";
 
 function setRefreshTokenCookie(res: Response, refreshToken: string) {
   res.cookie("refreshToken", refreshToken, {
@@ -101,6 +102,61 @@ class AuthController {
       entityType: "user",
     });
     return sendSuccess(res,"logged out successfully");
+  }
+
+  async getInvitation(req: Request, res: Response) {
+    const token = req.params.token;
+    if (!token || Array.isArray(token)) {
+      return sendError(res, "invitation token is required");
+    }
+
+    const invitation = await invitationService.getInvitationByToken(token);
+    return sendSuccess(res, "invitation fetched successfully", invitation);
+  }
+
+  async acceptInvitation(req: Request, res: Response) {
+    const parsed = acceptInvitationSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return sendError(res, parsed.error.issues[0]?.message ?? "Invalid input");
+    }
+
+    const accepted = await invitationService.acceptInvitation(
+      parsed.data.token,
+      parsed.data.userName,
+      parsed.data.userPassword,
+    );
+
+    const { accessToken, refreshToken, user, tenant } = await authService.issueSession(
+      accepted.userId,
+    );
+
+    setRefreshTokenCookie(res, refreshToken);
+
+    try {
+      await writeLog({
+        tenantId: tenant.id,
+        userId: user.id,
+        action: "MEMBER_JOINED",
+        entityType: "user",
+        entityId: user.id,
+        newValues: {
+          email: user.userEmail,
+          role: accepted.roleName,
+          invitationId: accepted.invitationId,
+        },
+      });
+    } catch (error) {
+      // The account already exists, so an audit failure must not block the
+      // user from receiving a valid session.
+      console.error("Failed to write member joined audit log:", error);
+    }
+
+    return sendSuccess(
+      res,
+      "invitation accepted successfully",
+      { accessToken, user, tenant },
+      201,
+    );
   }
 }
 

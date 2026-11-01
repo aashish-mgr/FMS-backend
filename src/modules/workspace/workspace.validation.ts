@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ASSIGNABLE_ROLES } from "../../config/constants";
 
 const workspaceSettingsSchema = z
   .object({
@@ -22,3 +23,21 @@ export const updateWorkspaceSchema = z
   });
 
 export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>;
+
+export const inviteMemberSchema = z.object({
+  userEmail: z
+    .string()
+    .trim()
+    .email("userEmail must be a valid email")
+    .max(255, "userEmail is too long")
+    .transform((value) => value.toLowerCase()),
+  roleName: z.enum(ASSIGNABLE_ROLES),
+});
+
+export type InviteMemberInput = z.infer<typeof inviteMemberSchema>;
+
+export const updateMemberRoleSchema = z.object({
+  roleName: z.enum(ASSIGNABLE_ROLES),
+});
+
+export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;

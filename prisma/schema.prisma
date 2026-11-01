@@ -14,6 +14,13 @@ enum TenantStatus {
   CANCELLED
 }
 
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
 model Tenant {
   id          String       @id @default(uuid()) @db.Uuid
   name        String       @db.VarChar(255)
@@ -35,39 +42,42 @@ model Tenant {
   remainders        Remainder[]
   auditLogs         AuditLogs[]
   attachments       Attachment[]
+  invitations       WorkspaceInvitation[]
 
   @@map("tenants")
 }
 
 model User {
-  id                                 String       @id @default(uuid()) @db.Uuid
-  tenantId                           String       @db.Uuid
-  userName                           String       @db.VarChar(255)
-  userEmail                          String       @unique @db.VarChar(255)
-  userPassword                       String       @db.VarChar(255)
-  createdAt                          DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt                          DateTime     @updatedAt @db.Timestamptz(6)
-  deletedAt                          DateTime?    @db.Timestamptz(6)
-  tenant                             Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  expenses_expenses_createdByTousers Expense[]    @relation("expenses_createdByTousers")
-  expenses_expenses_updatedByTousers Expense[]    @relation("expenses_updatedByTousers")
-  incomes_incomes_createdByTousers   Income[]     @relation("incomes_createdByTousers")
-  incomes_incomes_updatedByTousers   Income[]     @relation("incomes_updatedByTousers")
+  id                                 String                @id @default(uuid()) @db.Uuid
+  tenantId                           String                @db.Uuid
+  userName                           String                @db.VarChar(255)
+  userEmail                          String                @unique @db.VarChar(255)
+  userPassword                       String                @db.VarChar(255)
+  createdAt                          DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt                          DateTime              @updatedAt @db.Timestamptz(6)
+  deletedAt                          DateTime?             @db.Timestamptz(6)
+  tenant                             Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  expenses_expenses_createdByTousers Expense[]             @relation("expenses_createdByTousers")
+  expenses_expenses_updatedByTousers Expense[]             @relation("expenses_updatedByTousers")
+  incomes_incomes_createdByTousers   Income[]              @relation("incomes_createdByTousers")
+  incomes_incomes_updatedByTousers   Income[]              @relation("incomes_updatedByTousers")
   notes                              Note[]
   remainders                         Remainder[]
   userRoles                          UserRole[]
   attachments                        Attachment[]
+  sentInvitations                    WorkspaceInvitation[] @relation("InvitationInvitedBy")
 
   @@index([tenantId])
   @@map("users")
 }
 
 model Role {
-  id        String     @id @default(uuid()) @db.Uuid
-  roleName  String     @db.VarChar(255)
-  createdAt DateTime   @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime   @updatedAt @db.Timestamptz(6)
-  userRoles UserRole[]
+  id          String                @id @default(uuid()) @db.Uuid
+  roleName    String                @db.VarChar(255)
+  createdAt   DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime              @updatedAt @db.Timestamptz(6)
+  userRoles   UserRole[]
+  invitations WorkspaceInvitation[]
 
   @@map("roles")
 }
@@ -247,6 +257,30 @@ model Attachment {
   @@index([tenantId, deletedAt])
   @@index([deletedAt])
   @@map("attachments")
+}
+
+model WorkspaceInvitation {
+  id         String           @id @default(uuid()) @db.Uuid
+  tenantId   String           @db.Uuid
+  email      String           @db.VarChar(255)
+  roleId     String           @db.Uuid
+  invitedBy  String?          @db.Uuid
+  tokenHash  String           @unique @db.VarChar(255)
+  status     InvitationStatus @default(PENDING)
+  expiresAt  DateTime         @db.Timestamptz(6)
+  acceptedAt DateTime?        @db.Timestamptz(6)
+  createdAt  DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime         @updatedAt @db.Timestamptz(6)
+  tenant     Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role       Role             @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  inviter    User?            @relation("InvitationInvitedBy", fields: [invitedBy], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, email])
+  @@index([tenantId, status])
+  @@index([expiresAt])
+  @@index([roleId])
+  @@index([invitedBy])
+  @@map("workspaceInvitations")
 }
 
 enum enum_remainders_priority {
