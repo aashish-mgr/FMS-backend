@@ -47,7 +47,12 @@ class reportController {
     }
 
     // pdf
-    const buffer = await generateIncomeExcelPdf(records, "Income Report");
+    const workspaceName = await reportService.getWorkspaceName(tenantId);
+    const buffer = await generateIncomeExcelPdf(
+      records,
+      "Income Report",
+      workspaceName,
+    );
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=income-report.pdf");
     return res.send(buffer);
@@ -84,7 +89,12 @@ class reportController {
     }
 
     // pdf
-    const buffer = await generateExpenseExcelPdf(records, "Expense Report");
+    const workspaceName = await reportService.getWorkspaceName(tenantId);
+    const buffer = await generateExpenseExcelPdf(
+      records,
+      "Expense Report",
+      workspaceName,
+    );
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=expense-report.pdf");
     return res.send(buffer);
@@ -119,7 +129,12 @@ class reportController {
       return res.send(buffer);
     }
  
-      const buffer = await generateProfitLossPdf(result, "Profit Loss Report");
+      const workspaceName = await reportService.getWorkspaceName(tenantId);
+      const buffer = await generateProfitLossPdf(
+        result,
+        "Profit Loss Report",
+        workspaceName,
+      );
       res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=profit-loss-report.pdf");
     return res.send(buffer);

@@ -7,6 +7,15 @@ interface ReportFilters {
   paymentMethod?: string;
 }
 
+export async function getWorkspaceName(tenantId: string) {
+  const tenant = await prisma.tenant.findFirst({
+    where: { id: tenantId, deletedAt: null },
+    select: { name: true },
+  });
+
+  return tenant?.name ?? "Workspace";
+}
+
 export async function getIncomeReport(tenantId: string, filters: ReportFilters) {
   const where: any = { tenantId, deletedAt: null };
   if (filters.from || filters.to) {

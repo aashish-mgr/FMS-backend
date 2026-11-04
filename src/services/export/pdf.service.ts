@@ -25,7 +25,11 @@ function formatNPR(amount: number) {
   return `Rs. ${amount.toLocaleString("en-NP", { minimumFractionDigits: 2 })}`;
 }
 
-export async function generateIncomeExcelPdf(records: any[], title: string): Promise<Buffer> {
+export async function generateIncomeExcelPdf(
+  records: any[],
+  title: string,
+  workspaceName: string,
+): Promise<Buffer> {
   ensureFontsConfigured();
 
   const total = records.reduce((sum, r) => sum + Number(r.amount), 0);
@@ -56,7 +60,7 @@ export async function generateIncomeExcelPdf(records: any[], title: string): Pro
 
   const pdf = pdfMake.createPdf({
     content: [
-      { text: "Digital Pathshala — Finance Management System", style: "header" },
+      { text: `${workspaceName} — Finance Management System`, style: "header" },
       { text: title, style: "subheader" },
       { text: " ", margin: [0, 8] },
       {
@@ -73,7 +77,11 @@ export async function generateIncomeExcelPdf(records: any[], title: string): Pro
   return pdf.getBuffer();
 }
 
-export async function generateExpenseExcelPdf(records: any[], title: string): Promise<Buffer> {
+export async function generateExpenseExcelPdf(
+  records: any[],
+  title: string,
+  workspaceName: string,
+): Promise<Buffer> {
   ensureFontsConfigured();
 
   const total = records.reduce((sum, r) => sum + Number(r.amount), 0);
@@ -104,7 +112,7 @@ export async function generateExpenseExcelPdf(records: any[], title: string): Pr
 
   const pdf = pdfMake.createPdf({
     content: [
-      { text: "Digital Pathshala — Finance Management System", style: "header" },
+      { text: `${workspaceName} — Finance Management System`, style: "header" },
       { text: title, style: "subheader" },
       { text: " ", margin: [0, 8] },
       {
@@ -131,7 +139,8 @@ export async function generateProfitLossPdf(
     incomeCount: number;
     expenseCount: number;
   },
-  title: string
+  title: string,
+  workspaceName: string,
 ): Promise<Buffer> {
   ensureFontsConfigured();
 
@@ -163,7 +172,7 @@ export async function generateProfitLossPdf(
 
   const pdf = pdfMake.createPdf({
     content: [
-      { text: "Digital Pathshala — Finance Management System", style: "header" },
+      { text: `${workspaceName} — Finance Management System`, style: "header" },
       { text: title, style: "subheader" },
       { text: " ", margin: [0, 8] },
       {
