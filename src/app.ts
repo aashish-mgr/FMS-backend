@@ -13,6 +13,7 @@ import reportRoute from "./modules/report/report.routes"
 import auditRoute from "./modules/audit/audit.routes"
 import workspaceRoute from "./modules/workspace/workspace.routes"
 import { globalErrorHandler } from "./middleware/errorHandler";
+import { envConfig } from "./config/env";
 import cors from 'cors'
 const app = express();
 dotenv.config();
@@ -20,7 +21,7 @@ dotenv.config();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: envConfig.frontendUrl,
     credentials: true,
 }))
 

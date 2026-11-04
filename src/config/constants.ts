@@ -12,6 +12,12 @@ export const INVITATION_EXPIRES_IN_DAYS = 7;
 export const INVITATION_EXPIRES_IN_MS =
   INVITATION_EXPIRES_IN_DAYS * 24 * 60 * 60 * 1000;
 
+// Keep expired invitations visible for a while so admins can resend them
+// instead of having to recreate the invitation from scratch.
+export const INVITATION_EXPIRED_RETENTION_DAYS = 30;
+export const INVITATION_EXPIRED_RETENTION_MS =
+  INVITATION_EXPIRED_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
 // The migration creates this workspace to own all pre-existing single-tenant
 // data. Keeping the values in one place lets the seed and onboarding code
 // agree on the same default.

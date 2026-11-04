@@ -2,8 +2,10 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../config/database";
+import { envConfig } from "../../config/env";
 import {
   ASSIGNABLE_ROLES,
+  INVITATION_EXPIRED_RETENTION_MS,
   INVITATION_EXPIRES_IN_MS,
   type AssignableRole,
 } from "../../config/constants";
@@ -19,6 +21,7 @@ const invitationSelect = {
   createdAt: true,
   role: { select: { roleName: true } },
   inviter: { select: { id: true, userName: true } },
+  tenant: { select: { name: true } },
 } satisfies Prisma.WorkspaceInvitationSelect;
 
 type InvitationRecord = Prisma.WorkspaceInvitationGetPayload<{
@@ -31,6 +34,10 @@ function normalizeEmail(email: string) {
 
 function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+function buildAcceptUrl(token: string) {
+  return `${envConfig.frontendUrl}/accept-invitation?token=${encodeURIComponent(token)}`;
 }
 
 function isAssignableRole(roleName: string): roleName is AssignableRole {
@@ -130,6 +137,8 @@ class InvitationService {
     return {
       invitation: serializeInvitation(invitation),
       token,
+      acceptUrl: buildAcceptUrl(token),
+      workspaceName: invitation.tenant.name,
     };
   }
 
@@ -139,8 +148,10 @@ class InvitationService {
     const invitations = await prisma.workspaceInvitation.findMany({
       where: {
         tenantId,
-        status: "PENDING",
-        expiresAt: { gt: new Date() },
+        status: { in: ["PENDING", "EXPIRED"] },
+        createdAt: {
+          gte: new Date(Date.now() - INVITATION_EXPIRED_RETENTION_MS),
+        },
       },
       select: invitationSelect,
       orderBy: { createdAt: "desc" },
@@ -173,6 +184,56 @@ class InvitationService {
     });
 
     return serializeInvitation(revoked);
+  }
+
+  async resendInvitation(tenantId: string, invitationId: string) {
+    await expireStaleInvitations(tenantId);
+
+    const invitation = await prisma.workspaceInvitation.findFirst({
+      where: {
+        id: invitationId,
+        tenantId,
+        status: { in: ["PENDING", "EXPIRED"] },
+      },
+      select: invitationSelect,
+    });
+
+    if (!invitation) {
+      throw httpError("invitation not found", 404);
+    }
+
+    if (!isAssignableRole(invitation.role.roleName)) {
+      throw httpError("invitation role is not valid", 400);
+    }
+
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        userEmail: { equals: invitation.email, mode: "insensitive" },
+      },
+      select: { id: true },
+    });
+
+    if (existingUser) {
+      throw httpError("an account with this email already exists", 409);
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const resent = await prisma.workspaceInvitation.update({
+      where: { id: invitation.id },
+      data: {
+        tokenHash: hashToken(token),
+        expiresAt: new Date(Date.now() + INVITATION_EXPIRES_IN_MS),
+        status: "PENDING",
+      },
+      select: invitationSelect,
+    });
+
+    return {
+      invitation: serializeInvitation(resent),
+      token,
+      acceptUrl: buildAcceptUrl(token),
+      workspaceName: resent.tenant.name,
+    };
   }
 
   async getInvitationByToken(token: string) {

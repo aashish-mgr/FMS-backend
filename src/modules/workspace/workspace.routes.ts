@@ -65,6 +65,14 @@ router
   );
 
 router
+  .route("/invitations/:invitationId/resend")
+  .post(
+    authGuard.isAuthenticated,
+    requirePermission(PERMISSIONS.MEMBER_INVITE),
+    handleError(invitationController.resendInvitation),
+  );
+
+router
   .route("/invitations/:invitationId")
   .delete(
     authGuard.isAuthenticated,
