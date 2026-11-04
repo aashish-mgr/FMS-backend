@@ -86,6 +86,7 @@ export async function sendInvitationEmail(
   const workspaceName = escapeHtml(input.workspaceName);
   const inviterName = escapeHtml(input.inviterName);
   const to = escapeHtml(input.to);
+  const subjectWorkspaceName = input.workspaceName.replace(/[\r\n]+/g, " ");
 
   const text = [
     `${input.inviterName} invited you to join ${input.workspaceName} on FMS.`,
@@ -134,7 +135,7 @@ export async function sendInvitationEmail(
     await transport.sendMail({
       from: envConfig.mailFrom,
       to: input.to,
-      subject: `You're invited to join ${input.workspaceName} on FMS`,
+      subject: `You're invited to join ${subjectWorkspaceName} on FMS`,
       text,
       html,
     });
