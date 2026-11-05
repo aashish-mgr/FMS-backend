@@ -8,6 +8,7 @@ import {
   ACCESS_TOKEN_EXPIRES_IN,
   EMAIL_VERIFICATION_EXPIRES_IN_MS,
   PASSWORD_RESET_EXPIRES_IN_MS,
+  REFRESH_TOKEN_COOKIE_MAX_AGE_MS,
   REFRESH_TOKEN_EXPIRES_IN,
 } from "../../config/constants";
 import { httpError } from "../../utils/httpError";
@@ -65,10 +66,26 @@ function serializeUser(user: SessionUser) {
   };
 }
 
-function buildSession(user: SessionUser) {
+async function createRefreshToken(user: Pick<User, "id" | "tenantId">) {
+  const token = generateRefreshToken(user);
+
+  await prisma.refreshToken.create({
+    data: {
+      userId: user.id,
+      tokenHash: hashAuthToken(token),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_COOKIE_MAX_AGE_MS),
+    },
+  });
+
+  return token;
+}
+
+async function buildSession(user: SessionUser) {
+  const refreshToken = await createRefreshToken(user);
+
   return {
     accessToken: generateAccessToken(user),
-    refreshToken: generateRefreshToken(user),
+    refreshToken,
     user: serializeUser(user),
     tenant: user.tenant,
   };
@@ -106,7 +123,7 @@ class AuthService {
       throw httpError("Invalid email or password", 400);
     }
 
-    return buildSession(user);
+    return await buildSession(user);
   }
 
   async issueSession(userId: string) {
@@ -126,7 +143,7 @@ class AuthService {
       throw new AppError("FORBIDDEN", "workspace is not active", 403);
     }
 
-    return buildSession(user);
+    return await buildSession(user);
   }
 
   async requestPasswordReset(userEmail: string) {
@@ -220,6 +237,12 @@ class AuthService {
         data: { userPassword: passwordHash },
       });
 
+      // A password reset must invalidate every existing session.
+      await tx.refreshToken.updateMany({
+        where: { userId: resetToken.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+
       await tx.passwordResetToken.deleteMany({
         where: {
           userId: resetToken.userId,
@@ -242,7 +265,12 @@ class AuthService {
     }
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+    currentRefreshToken?: string,
+  ) {
     const user = await prisma.user.findFirst({
       where: { id: userId, deletedAt: null },
     });
@@ -265,6 +293,9 @@ class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
+    const currentTokenHash = currentRefreshToken
+      ? hashAuthToken(currentRefreshToken)
+      : null;
 
     await prisma.$transaction([
       prisma.user.update({
@@ -273,6 +304,17 @@ class AuthService {
       }),
       prisma.passwordResetToken.deleteMany({
         where: { userId: user.id, usedAt: null },
+      }),
+      // Keep the session that made the change, but revoke every other device.
+      prisma.refreshToken.updateMany({
+        where: {
+          userId: user.id,
+          revokedAt: null,
+          ...(currentTokenHash
+            ? { tokenHash: { not: currentTokenHash } }
+            : {}),
+        },
+        data: { revokedAt: new Date() },
       }),
     ]);
 
@@ -415,16 +457,34 @@ class AuthService {
       throw new AppError("UNAUTHORIZED", "refresh token is not valid", 401);
     }
 
-    const user = await prisma.user.findFirst({
-      where: { id: decoded.id, deletedAt: null },
+    const storedToken = await prisma.refreshToken.findFirst({
+      where: {
+        tokenHash: hashAuthToken(refreshToken),
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
       include: {
-        tenant: true,
-        userRoles: { include: { roles: true } },
+        user: {
+          include: {
+            tenant: true,
+            userRoles: { include: { roles: true } },
+          },
+        },
       },
     });
 
-    if (!user) {
+    if (!storedToken) {
+      throw new AppError("UNAUTHORIZED", "refresh token is not valid", 401);
+    }
+
+    const user = storedToken.user;
+
+    if (user.deletedAt) {
       throw new AppError("UNAUTHORIZED", "user no longer exists", 401);
+    }
+
+    if (decoded.id !== user.id) {
+      throw new AppError("UNAUTHORIZED", "refresh token is not valid", 401);
     }
 
     if (decoded.tenantId !== user.tenantId) {
@@ -435,11 +495,54 @@ class AuthService {
       throw new AppError("FORBIDDEN", "workspace is not active", 403);
     }
 
+    // Rotate the refresh token in a transaction so a token can only be used
+    // once. The old row is revoked and a new hash is stored atomically.
+    const rotatedRefreshToken = await prisma.$transaction(async (tx) => {
+      const revoked = await tx.refreshToken.updateMany({
+        where: { id: storedToken.id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+
+      if (revoked.count !== 1) {
+        throw new AppError("UNAUTHORIZED", "refresh token is not valid", 401);
+      }
+
+      const nextRefreshToken = generateRefreshToken(user);
+
+      await tx.refreshToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: hashAuthToken(nextRefreshToken),
+          expiresAt: new Date(Date.now() + REFRESH_TOKEN_COOKIE_MAX_AGE_MS),
+        },
+      });
+
+      return nextRefreshToken;
+    });
+
     return {
       accessToken: generateAccessToken(user),
+      refreshToken: rotatedRefreshToken,
       user: serializeUser(user),
       tenant: user.tenant,
     };
+  }
+
+  async revokeRefreshToken(refreshToken: string) {
+    await prisma.refreshToken.updateMany({
+      where: {
+        tokenHash: hashAuthToken(refreshToken),
+        revokedAt: null,
+      },
+      data: { revokedAt: new Date() },
+    });
+  }
+
+  async revokeAllRefreshTokens(userId: string) {
+    await prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
   }
 }
 

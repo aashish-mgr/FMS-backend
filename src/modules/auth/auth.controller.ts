@@ -105,11 +105,21 @@ class AuthController {
       return sendError(res, "token is required");
     }
 
-    const session = await authService.refresh(token);
+    const { refreshToken: rotatedRefreshToken, ...session } =
+      await authService.refresh(token);
+
+    setRefreshTokenCookie(res, rotatedRefreshToken);
+
     return sendSuccess(res,"token refreshed successfully", session);
   }
 
   async logout(req: AuthRequest,res: Response) {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (refreshToken) {
+      await authService.revokeRefreshToken(refreshToken);
+    }
+
     res.clearCookie("refreshToken");
     await writeLog({
       tenantId: req.user?.tenantId ?? null,
@@ -118,6 +128,25 @@ class AuthController {
       entityType: "user",
     });
     return sendSuccess(res,"logged out successfully");
+  }
+
+  async logoutAll(req: AuthRequest, res: Response) {
+    if (!req.user) {
+      return sendError(res, "user is required", 401);
+    }
+
+    await authService.revokeAllRefreshTokens(req.user.id);
+    res.clearCookie("refreshToken");
+
+    await writeLog({
+      tenantId: req.user.tenantId,
+      userId: req.user.id,
+      action: "USER_LOGOUT_ALL",
+      entityType: "user",
+      entityId: req.user.id,
+    });
+
+    return sendSuccess(res, "logged out of all devices successfully");
   }
 
   async forgotPassword(req: Request, res: Response) {
@@ -160,6 +189,7 @@ class AuthController {
       req.user.id,
       parsed.data.currentPassword,
       parsed.data.newPassword,
+      req.cookies?.refreshToken,
     );
 
     return sendSuccess(res, "password changed successfully");

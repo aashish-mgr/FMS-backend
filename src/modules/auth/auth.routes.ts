@@ -15,6 +15,9 @@ router.route("/invitations/:token").get(handleError(authController.getInvitation
 router.route("/accept-invitation").post(handleError(authController.acceptInvitation));
 router.route("/logout").post(authGuard.isAuthenticated,handleError(authController.logout));
 router
+  .route("/logout-all")
+  .post(authGuard.isAuthenticated, handleError(authController.logoutAll));
+router
   .route("/change-password")
   .post(authGuard.isAuthenticated, handleError(authController.changePassword));
 router
