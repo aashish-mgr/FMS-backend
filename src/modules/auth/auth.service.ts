@@ -6,6 +6,7 @@ import { prisma } from "../../config/database";
 import { envConfig } from "../../config/env";
 import {
   ACCESS_TOKEN_EXPIRES_IN,
+  EMAIL_VERIFICATION_EXPIRES_IN_MS,
   PASSWORD_RESET_EXPIRES_IN_MS,
   REFRESH_TOKEN_EXPIRES_IN,
 } from "../../config/constants";
@@ -13,7 +14,10 @@ import { httpError } from "../../utils/httpError";
 import { AppError } from "../../utils/AppError";
 import { generateAuthToken, hashAuthToken } from "../../utils/authToken";
 import { writeLog } from "../../services/audit.service";
-import { sendPasswordResetEmail } from "../../services/email.service";
+import {
+  sendEmailVerificationEmail,
+  sendPasswordResetEmail,
+} from "../../services/email.service";
 import { isTenantActive } from "../../utils/tenant";
 
 interface RefreshTokenPayload extends JwtPayload {
@@ -53,6 +57,7 @@ function serializeUser(user: SessionUser) {
     tenantId: user.tenantId,
     userName: user.userName,
     userEmail: user.userEmail,
+    emailVerifiedAt: user.emailVerifiedAt,
     roles: roleNames,
     role: roleNames[0] ?? null,
     createdAt: user.createdAt,
@@ -282,6 +287,119 @@ class AuthService {
     } catch (error) {
       console.error("Failed to write password change audit log:", error);
     }
+  }
+
+  async sendEmailVerification(userId: string) {
+    const user = await prisma.user.findFirst({
+      where: { id: userId, deletedAt: null },
+      include: { tenant: true },
+    });
+
+    if (!user) {
+      throw new AppError("UNAUTHORIZED", "user no longer exists", 401);
+    }
+
+    if (user.emailVerifiedAt) {
+      throw httpError("email is already verified", 400);
+    }
+
+    const token = generateAuthToken();
+    const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_EXPIRES_IN_MS);
+
+    await prisma.$transaction([
+      prisma.emailVerificationToken.deleteMany({
+        where: { userId: user.id, usedAt: null },
+      }),
+      prisma.emailVerificationToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: hashAuthToken(token),
+          expiresAt,
+        },
+      }),
+    ]);
+
+    const verifyUrl = `${envConfig.frontendUrl}/verify-email?token=${encodeURIComponent(token)}`;
+
+    const emailSent = await sendEmailVerificationEmail({
+      to: user.userEmail,
+      userName: user.userName,
+      workspaceName: user.tenant.name,
+      verifyUrl,
+      expiresAt,
+    });
+
+    try {
+      await writeLog({
+        tenantId: user.tenantId,
+        userId: user.id,
+        action: "EMAIL_VERIFICATION_SENT",
+        entityType: "user",
+        entityId: user.id,
+      });
+    } catch (error) {
+      console.error("Failed to write email verification audit log:", error);
+    }
+
+    return { emailSent };
+  }
+
+  async verifyEmail(token: string) {
+    const verification = await prisma.emailVerificationToken.findFirst({
+      where: {
+        tokenHash: hashAuthToken(token),
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      include: { user: true },
+    });
+
+    if (!verification || verification.user.deletedAt) {
+      throw httpError("verification link is invalid or has expired", 400);
+    }
+
+    const verifiedAt = new Date();
+
+    await prisma.$transaction(async (tx) => {
+      const consumed = await tx.emailVerificationToken.updateMany({
+        where: { id: verification.id, usedAt: null },
+        data: { usedAt: verifiedAt },
+      });
+
+      if (consumed.count !== 1) {
+        throw httpError("verification link is invalid or has expired", 400);
+      }
+
+      await tx.user.update({
+        where: { id: verification.userId },
+        data: { emailVerifiedAt: verifiedAt },
+      });
+
+      await tx.emailVerificationToken.deleteMany({
+        where: {
+          userId: verification.userId,
+          usedAt: null,
+          id: { not: verification.id },
+        },
+      });
+    });
+
+    try {
+      await writeLog({
+        tenantId: verification.user.tenantId,
+        userId: verification.userId,
+        action: "EMAIL_VERIFIED",
+        entityType: "user",
+        entityId: verification.userId,
+      });
+    } catch (error) {
+      console.error("Failed to write email verification audit log:", error);
+    }
+
+    return {
+      userId: verification.userId,
+      emailVerifiedAt: verifiedAt,
+    };
   }
 
   async refresh(refreshToken: string) {

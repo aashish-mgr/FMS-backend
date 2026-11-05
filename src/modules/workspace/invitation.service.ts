@@ -320,6 +320,9 @@ class InvitationService {
             userName,
             userEmail: current.email,
             userPassword: passwordHash,
+            // Accepting a link delivered to the invited email address proves
+            // control of that inbox, so invited members start verified.
+            emailVerifiedAt: new Date(),
           },
         });
 

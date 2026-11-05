@@ -39,6 +39,9 @@ export const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 day
 // Password-reset links are short-lived because they grant account access.
 export const PASSWORD_RESET_EXPIRES_IN_MS = 60 * 60 * 1000; // 1 hour
 
+// Verification links are valid for a day so users can find the email later.
+export const EMAIL_VERIFICATION_EXPIRES_IN_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;

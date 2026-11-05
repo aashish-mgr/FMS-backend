@@ -91,3 +91,13 @@ export const changePasswordSchema = z.object({
 });
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
+export const verifyEmailSchema = z.object({
+  token: z
+    .string()
+    .trim()
+    .min(32, "verification token is required")
+    .max(255, "verification token is invalid"),
+});
+
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;

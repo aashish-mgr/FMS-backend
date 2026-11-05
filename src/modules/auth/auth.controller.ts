@@ -7,6 +7,7 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
 } from "./auth.validation";
 import { REFRESH_TOKEN_COOKIE_MAX_AGE_MS } from "../../config/constants";
 import { sendError, sendSuccess } from "../../utils/response";
@@ -82,6 +83,14 @@ class AuthController {
       console.error("Failed to write workspace creation audit log:", error);
     }
 
+    try {
+      await authService.sendEmailVerification(user.id);
+    } catch (error) {
+      // Signup must still succeed when SMTP is unavailable; the user can
+      // resend the verification email from the in-app banner.
+      console.error("Failed to send email verification:", error);
+    }
+
     return sendSuccess(
       res,
       "workspace created successfully",
@@ -154,6 +163,27 @@ class AuthController {
     );
 
     return sendSuccess(res, "password changed successfully");
+  }
+
+  async verifyEmail(req: Request, res: Response) {
+    const parsed = verifyEmailSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return sendError(res, parsed.error.issues[0]?.message ?? "Invalid input");
+    }
+
+    const result = await authService.verifyEmail(parsed.data.token);
+
+    return sendSuccess(res, "email verified successfully", result);
+  }
+
+  async resendVerification(req: AuthRequest, res: Response) {
+    if (!req.user) {
+      return sendError(res, "user is required", 401);
+    }
+
+    const result = await authService.sendEmailVerification(req.user.id);
+
+    return sendSuccess(res, "verification email sent", result);
   }
 
   async getInvitation(req: Request, res: Response) {

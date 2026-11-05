@@ -19,6 +19,14 @@ export interface PasswordResetEmailInput {
   expiresAt: Date;
 }
 
+export interface EmailVerificationEmailInput {
+  to: string;
+  userName: string;
+  workspaceName: string;
+  verifyUrl: string;
+  expiresAt: Date;
+}
+
 let transporter: Transporter | null | undefined;
 
 function getTransporter(): Transporter | null {
@@ -225,6 +233,77 @@ export async function sendPasswordResetEmail(
   } catch (error) {
     console.error(
       "[email] Failed to send password reset email:",
+      error instanceof Error ? error.message : error,
+    );
+    return false;
+  }
+}
+
+export async function sendEmailVerificationEmail(
+  input: EmailVerificationEmailInput,
+): Promise<boolean> {
+  const transport = getTransporter();
+
+  if (!transport) {
+    console.warn(
+      "[email] SMTP is not configured; email verification email was not sent.",
+    );
+    if (process.env.NODE_ENV !== "production") {
+      console.info("[email] Email verification URL:", input.verifyUrl);
+    }
+    return false;
+  }
+
+  const verifyUrl = escapeHtml(input.verifyUrl);
+  const userName = escapeHtml(input.userName);
+  const workspaceName = escapeHtml(input.workspaceName);
+  const expiry = formatExpiry(input.expiresAt);
+  const subjectWorkspaceName = input.workspaceName.replace(/[\r\n]+/g, " ");
+
+  const text = [
+    `Hi ${input.userName},`,
+    "",
+    `Verify your email for your FMS account in ${input.workspaceName}.`,
+    `This link expires: ${expiry}`,
+    "",
+    `Verify your email: ${input.verifyUrl}`,
+    "",
+    "If you did not create this account, you can ignore this email.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 560px; margin: 0 auto;">
+      <h2 style="margin: 0 0 16px;">Verify your email</h2>
+      <p>Hi ${userName},</p>
+      <p>Verify your email for your FMS account in <strong>${workspaceName}</strong>.</p>
+      <p style="margin: 20px 0;">
+        <a href="${verifyUrl}" style="display: inline-block; background: #111827; color: #ffffff; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+          Verify email
+        </a>
+      </p>
+      <p style="font-size: 14px; color: #6b7280;">This link expires ${expiry}.</p>
+      <p style="font-size: 12px; color: #6b7280;">
+        If the button does not work, copy this link into your browser:<br />
+        <a href="${verifyUrl}">${verifyUrl}</a>
+      </p>
+      <p style="font-size: 12px; color: #6b7280;">
+        If you did not create this account, you can ignore this email.
+      </p>
+    </div>
+  `;
+
+  try {
+    await transport.sendMail({
+      from: envConfig.mailFrom,
+      to: input.to,
+      subject: `Verify your email${subjectWorkspaceName ? ` for ${subjectWorkspaceName}` : ""}`,
+      text,
+      html,
+    });
+    return true;
+  } catch (error) {
+    console.error(
+      "[email] Failed to send email verification email:",
       error instanceof Error ? error.message : error,
     );
     return false;
