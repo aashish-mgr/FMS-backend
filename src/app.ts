@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
 import { connectDb } from "./config/database";
 import authRoute from "./modules/auth/auth.routes";
 import incomeRoute from "./modules/income/income.routes";
@@ -13,17 +14,29 @@ import reportRoute from "./modules/report/report.routes"
 import auditRoute from "./modules/audit/audit.routes"
 import workspaceRoute from "./modules/workspace/workspace.routes"
 import { globalErrorHandler } from "./middleware/errorHandler";
+import { apiLimiter } from "./middleware/rateLimit";
 import { envConfig } from "./config/env";
 import cors from 'cors'
 const app = express();
 dotenv.config();
 
-app.use(express.json());
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
+
+app.use(
+  helmet({
+    // Report downloads and attachment URLs are served from this API origin but
+    // consumed by the separate frontend origin.
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
+app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(cors({
     origin: envConfig.frontendUrl,
     credentials: true,
 }))
+app.use(apiLimiter);
 
 connectDb();
 
