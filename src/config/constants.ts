@@ -36,6 +36,9 @@ export const ACCESS_TOKEN_EXPIRES_IN = "15m";
 export const REFRESH_TOKEN_EXPIRES_IN = "7d";
 export const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+// Password-reset links are short-lived because they grant account access.
+export const PASSWORD_RESET_EXPIRES_IN_MS = 60 * 60 * 1000; // 1 hour
+
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;

@@ -55,3 +55,39 @@ export const acceptInvitationSchema = z.object({
 });
 
 export type AcceptInvitationInput = z.infer<typeof acceptInvitationSchema>;
+
+export const forgotPasswordSchema = z.object({
+  userEmail: z
+    .string()
+    .trim()
+    .min(1, "userEmail is required")
+    .email("userEmail must be a valid email")
+    .max(255)
+    .transform((value) => value.toLowerCase()),
+});
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z
+    .string()
+    .trim()
+    .min(32, "reset token is required")
+    .max(255, "reset token is invalid"),
+  userPassword: z
+    .string()
+    .min(8, "userPassword must be at least 8 characters")
+    .max(72, "userPassword must be at most 72 characters"),
+});
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "currentPassword is required"),
+  newPassword: z
+    .string()
+    .min(8, "newPassword must be at least 8 characters")
+    .max(72, "newPassword must be at most 72 characters"),
+});
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

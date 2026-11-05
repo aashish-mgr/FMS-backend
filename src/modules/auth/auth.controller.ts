@@ -1,6 +1,13 @@
 import { Request, Response } from "express";
 import authService from "./auth.service";
-import { acceptInvitationSchema, loginSchema, registerSchema } from "./auth.validation";
+import {
+  acceptInvitationSchema,
+  changePasswordSchema,
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+} from "./auth.validation";
 import { REFRESH_TOKEN_COOKIE_MAX_AGE_MS } from "../../config/constants";
 import { sendError, sendSuccess } from "../../utils/response";
 import { writeLog } from "../../services/audit.service";
@@ -102,6 +109,51 @@ class AuthController {
       entityType: "user",
     });
     return sendSuccess(res,"logged out successfully");
+  }
+
+  async forgotPassword(req: Request, res: Response) {
+    const parsed = forgotPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return sendError(res, parsed.error.issues[0]?.message ?? "Invalid input");
+    }
+
+    await authService.requestPasswordReset(parsed.data.userEmail);
+
+    // Deliberately generic so this endpoint cannot be used to enumerate users.
+    return sendSuccess(
+      res,
+      "If an account with that email exists, a password reset link has been sent.",
+    );
+  }
+
+  async resetPassword(req: Request, res: Response) {
+    const parsed = resetPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return sendError(res, parsed.error.issues[0]?.message ?? "Invalid input");
+    }
+
+    await authService.resetPassword(parsed.data.token, parsed.data.userPassword);
+
+    return sendSuccess(res, "password reset successfully");
+  }
+
+  async changePassword(req: AuthRequest, res: Response) {
+    const parsed = changePasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return sendError(res, parsed.error.issues[0]?.message ?? "Invalid input");
+    }
+
+    if (!req.user) {
+      return sendError(res, "user is required", 401);
+    }
+
+    await authService.changePassword(
+      req.user.id,
+      parsed.data.currentPassword,
+      parsed.data.newPassword,
+    );
+
+    return sendSuccess(res, "password changed successfully");
   }
 
   async getInvitation(req: Request, res: Response) {

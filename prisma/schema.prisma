@@ -66,9 +66,24 @@ model User {
   userRoles                          UserRole[]
   attachments                        Attachment[]
   sentInvitations                    WorkspaceInvitation[] @relation("InvitationInvitedBy")
+  passwordResetTokens                PasswordResetToken[]
 
   @@index([tenantId])
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique @db.VarChar(255)
+  expiresAt DateTime  @db.Timestamptz(6)
+  usedAt    DateTime? @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("passwordResetTokens")
 }
 
 model Role {
