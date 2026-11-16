@@ -8,6 +8,7 @@ import {
 } from "./components";
 import { analyticsPaths } from "./paths/analytics";
 import { authPaths } from "./paths/auth";
+import { notePaths } from "./paths/notes";
 import { transactionPaths } from "./paths/transactions";
 
 export const openapi: OpenAPIV3.Document = {
@@ -39,6 +40,7 @@ export const openapi: OpenAPIV3.Document = {
     ...authPaths,
     ...transactionPaths,
     ...analyticsPaths,
+    ...notePaths,
   },
   components: {
     securitySchemes,
