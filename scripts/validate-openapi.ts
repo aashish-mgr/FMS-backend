@@ -178,7 +178,7 @@ async function main(): Promise<void> {
 
   const operationIds = new Set<string>();
 
-  for (const pathItem of Object.values(openapi.paths)) {
+  for (const [path, pathItem] of Object.entries(openapi.paths)) {
     for (const method of HTTP_METHODS) {
       const operation = pathItem?.[method];
 
@@ -187,7 +187,7 @@ async function main(): Promise<void> {
       }
 
       if (!operation.operationId) {
-        throw new Error(`${method.toUpperCase()} ${operation.tags?.join(",")} is missing operationId`);
+        throw new Error(`${method.toUpperCase()} ${path} is missing operationId`);
       }
 
       if (operationIds.has(operation.operationId)) {
@@ -198,6 +198,12 @@ async function main(): Promise<void> {
 
       if (!operation.summary) {
         throw new Error(`Operation ${operation.operationId} is missing a summary`);
+      }
+
+      if (!operation.description) {
+        throw new Error(
+          `Operation ${operation.operationId} is missing a description`,
+        );
       }
 
       if (!operation.tags || operation.tags.length === 0) {
