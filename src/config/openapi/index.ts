@@ -6,6 +6,7 @@ import {
   securitySchemes,
   tags,
 } from "./components";
+import { authPaths } from "./paths/auth";
 
 export const openapi: OpenAPIV3.Document = {
   openapi: "3.0.3",
@@ -32,7 +33,9 @@ export const openapi: OpenAPIV3.Document = {
   ],
   tags,
   security: [{ bearerAuth: [] }],
-  paths: {},
+  paths: {
+    ...authPaths,
+  },
   components: {
     securitySchemes,
     schemas,
