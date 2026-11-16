@@ -6,6 +6,7 @@ import {
   securitySchemes,
   tags,
 } from "./components";
+import { analyticsPaths } from "./paths/analytics";
 import { authPaths } from "./paths/auth";
 import { transactionPaths } from "./paths/transactions";
 
@@ -37,6 +38,7 @@ export const openapi: OpenAPIV3.Document = {
   paths: {
     ...authPaths,
     ...transactionPaths,
+    ...analyticsPaths,
   },
   components: {
     securitySchemes,
