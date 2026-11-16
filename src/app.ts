@@ -17,6 +17,8 @@ import { globalErrorHandler } from "./middleware/errorHandler";
 import { apiLimiter } from "./middleware/rateLimit";
 import { envConfig } from "./config/env";
 import cors from 'cors'
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./config/swagger";
 const app = express();
 dotenv.config();
 
@@ -36,6 +38,23 @@ app.use(cors({
     origin: envConfig.frontendUrl,
     credentials: true,
 }))
+
+// Keep documentation available even when the API rate limit is exhausted.
+// The docs are read-only and do not touch tenant data.
+app.get("/api-docs.json", (_req, res) => {
+  res.json(swaggerSpec);
+});
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: "FMS API Docs",
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  }),
+);
+
 app.use(apiLimiter);
 
 connectDb();
