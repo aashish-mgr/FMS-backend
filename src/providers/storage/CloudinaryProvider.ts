@@ -133,7 +133,12 @@ export class CloudinaryProvider implements StorageService {
     options: DownloadUrlOptions = {},
   ): string {
     const resourceType = options.resourceType ?? 'image';
-    const format = downloadFormat(options.fileName ?? storageKey);
+    // Raw assets keep their extension in the public ID, so signing a separate
+    // format would produce a duplicated extension. Image assets need it.
+    const format =
+      resourceType === 'raw'
+        ? ''
+        : downloadFormat(options.fileName ?? storageKey);
     const expiresAt =
       Math.floor(Date.now() / 1000) +
       (options.expiresInSeconds ?? DEFAULT_DOWNLOAD_EXPIRY_SECONDS);
