@@ -30,6 +30,30 @@ const envSchema = z.object({
   SMTP_USER: z.string().trim().optional(),
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().trim().min(1).default('FMS <no-reply@fms.local>'),
+  // Required only when STORAGE_PROVIDER=cloudinary. The validation below
+  // fails startup instead of silently falling back to local disk.
+  CLOUDINARY_CLOUD_NAME: z.string().trim().min(1).optional(),
+  CLOUDINARY_API_KEY: z.string().trim().min(1).optional(),
+  CLOUDINARY_API_SECRET: z.string().trim().min(1).optional(),
+  CLOUDINARY_FOLDER: z.string().trim().min(1).default('fms'),
+}).superRefine((data, ctx) => {
+  if (data.STORAGE_PROVIDER !== 'cloudinary') return;
+
+  const requiredCloudinaryValues = [
+    ['CLOUDINARY_CLOUD_NAME', data.CLOUDINARY_CLOUD_NAME],
+    ['CLOUDINARY_API_KEY', data.CLOUDINARY_API_KEY],
+    ['CLOUDINARY_API_SECRET', data.CLOUDINARY_API_SECRET],
+  ] as const;
+
+  for (const [key, value] of requiredCloudinaryValues) {
+    if (!value) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [key],
+        message: `${key} is required when STORAGE_PROVIDER=cloudinary`,
+      });
+    }
+  }
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -54,5 +78,9 @@ export const envConfig = {
   smtpUser: parsed.data.SMTP_USER,
   smtpPass: parsed.data.SMTP_PASS,
   mailFrom: parsed.data.MAIL_FROM,
+  cloudinaryCloudName: parsed.data.CLOUDINARY_CLOUD_NAME,
+  cloudinaryApiKey: parsed.data.CLOUDINARY_API_KEY,
+  cloudinaryApiSecret: parsed.data.CLOUDINARY_API_SECRET,
+  cloudinaryFolder: parsed.data.CLOUDINARY_FOLDER,
 };
 
