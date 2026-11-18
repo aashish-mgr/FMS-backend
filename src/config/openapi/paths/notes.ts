@@ -67,8 +67,18 @@ function attachmentPaths(entityType: "income" | "expense" | "reminder"): OpenAPI
           { $ref: "#/components/parameters/AttachmentId" },
         ],
         responses: {
+          "200": {
+            description:
+              "Streams the attachment when the local storage provider is used.",
+            content: {
+              "application/octet-stream": {
+                schema: { type: "string", format: "binary" },
+              },
+            },
+          },
           "302": {
-            description: "Redirects to a short-lived signed download URL.",
+            description:
+              "Redirects to a short-lived signed download URL when Cloudinary is used.",
           },
           ...protectedErrors,
         },

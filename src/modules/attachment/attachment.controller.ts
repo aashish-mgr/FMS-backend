@@ -98,14 +98,22 @@ export async function downloadHandler(req: AuthRequest, res: Response, next: Nex
       return sendError(res, 'entityId and attachmentId are required');
     }
 
-    const { downloadUrl } = await attachmentService.getAttachmentDownload(
+    const download = await attachmentService.getAttachmentDownload(
       tenantId,
       attachmentId,
       entityType,
       entityId,
     );
 
-    return res.redirect(302, downloadUrl);
+    if ('stream' in download) {
+      res.attachment(download.attachment.fileName);
+      res.type(download.attachment.mimeType);
+      download.stream.on('error', next);
+      download.stream.pipe(res);
+      return;
+    }
+
+    return res.redirect(302, download.downloadUrl);
   } catch (err) {
     next(err);
   }

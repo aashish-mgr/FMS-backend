@@ -190,6 +190,16 @@ export async function getAttachmentDownload(
   if (!attachment) throw new AppError('NOT_FOUND', 'Attachment not found', 404);
 
   const storage = getStorageService(providerFor(attachment.provider));
+
+  // Local files are not publicly served. Stream them through this authenticated
+  // route instead of redirecting to a static path.
+  if (attachment.provider === 'local' && storage.getStream) {
+    return {
+      attachment,
+      stream: await storage.getStream(attachment.storageKey),
+    };
+  }
+
   const downloadUrl = storage.getDownloadUrl(attachment.storageKey, {
     resourceType: resourceTypeFor(attachment),
     fileName: attachment.fileName,
