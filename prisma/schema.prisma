@@ -283,21 +283,22 @@ model AuditLogs {
 }
 
 model Attachment {
-  id         String    @id @default(uuid()) @db.Uuid
-  tenantId   String    @db.Uuid
-  entityType String    @db.VarChar(50)
-  entityId   String    @db.Uuid
-  fileName   String    @db.VarChar(255)
-  fileSize   Int // bytes; Int is fine up to ~2GB, well above the 10MB cap
-  mimeType   String    @db.VarChar(100)
-  storageKey String    @db.VarChar(500)
-  storageUrl String    @db.Text
-  provider   String    @db.VarChar(50)
-  uploadedBy String    @db.Uuid
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
-  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  uploader   User      @relation(fields: [uploadedBy], references: [id])
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @db.Uuid
+  entityType   String    @db.VarChar(50)
+  entityId     String    @db.Uuid
+  fileName     String    @db.VarChar(255)
+  fileSize     Int // bytes; Int is fine up to ~2GB, well above the 10MB cap
+  mimeType     String    @db.VarChar(100)
+  storageKey   String    @db.VarChar(500)
+  storageUrl   String    @db.Text
+  provider     String    @db.VarChar(50)
+  resourceType String?   @db.VarChar(20)
+  uploadedBy   String    @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  uploader     User      @relation(fields: [uploadedBy], references: [id])
 
   @@index([tenantId, entityType, entityId])
   @@index([tenantId, deletedAt])
