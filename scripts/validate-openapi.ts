@@ -210,13 +210,13 @@ async function main(): Promise<void> {
         throw new Error(`Operation ${operation.operationId} is missing tags`);
       }
 
-      const hasSuccessResponse = Object.keys(operation.responses).some((status) =>
-        status.startsWith("2"),
+      const hasSuccessResponse = Object.keys(operation.responses).some(
+        (status) => status.startsWith("2") || status.startsWith("3"),
       );
 
       if (!hasSuccessResponse) {
         throw new Error(
-          `Operation ${operation.operationId} is missing a 2xx response`,
+          `Operation ${operation.operationId} is missing a 2xx or 3xx response`,
         );
       }
     }

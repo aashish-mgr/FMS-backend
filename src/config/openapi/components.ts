@@ -539,11 +539,11 @@ export const schemas: Record<
       "fileName",
       "fileSize",
       "mimeType",
-      "storageKey",
-      "storageUrl",
       "provider",
+      "resourceType",
       "uploadedBy",
       "createdAt",
+      "downloadUrl",
     ],
     properties: {
       id: uuid,
@@ -553,12 +553,22 @@ export const schemas: Record<
       fileName: { type: "string" },
       fileSize: { type: "integer", description: "File size in bytes." },
       mimeType: { type: "string" },
-      storageKey: { type: "string" },
-      storageUrl: { type: "string" },
       provider: { type: "string", enum: ["local", "cloudinary"] },
+      resourceType: {
+        type: "string",
+        enum: ["image", "raw", "video"],
+        nullable: true,
+        description:
+          "Cloudinary resource type used for signed downloads and deletion. Null only for legacy records.",
+      },
       uploadedBy: uuid,
       createdAt: dateTime,
       deletedAt: nullableDateTime,
+      downloadUrl: {
+        type: "string",
+        description:
+          "Authenticated API path that redirects to a short-lived signed download URL.",
+      },
     },
   },
 

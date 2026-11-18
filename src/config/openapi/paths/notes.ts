@@ -14,12 +14,29 @@ function attachmentPaths(entityType: "income" | "expense" | "reminder"): OpenAPI
 
   return {
     [base]: {
+      get: {
+        tags: ["Attachments"],
+        summary: `List ${entityType} attachments`,
+        operationId: `list${entityType[0]!.toUpperCase()}${entityType.slice(1)}Attachments`,
+        description: permissionDescription(
+          `Returns non-deleted attachments linked to an existing ${entityType} record in the active workspace.`,
+          "attachment:read",
+        ),
+        parameters: [{ $ref: "#/components/parameters/EntityId" }],
+        responses: {
+          "200": success("attachments fetched successfully", {
+            type: "array",
+            items: schemaRef("Attachment"),
+          }),
+          ...protectedErrors,
+        },
+      },
       post: {
         tags: ["Attachments"],
         summary: `Upload ${entityType} attachments`,
         operationId: `upload${entityType[0]!.toUpperCase()}${entityType.slice(1)}Attachments`,
         description: permissionDescription(
-          `Uploads one or more PDF or image files and links them to an existing ${entityType} record in the active workspace.`,
+          `Uploads one or more PDF or image files and links them to an existing ${entityType} record in the active workspace. Files are stored privately and downloaded through a signed URL.`,
           "attachment:create",
         ),
         parameters: [{ $ref: "#/components/parameters/EntityId" }],
@@ -36,13 +53,35 @@ function attachmentPaths(entityType: "income" | "expense" | "reminder"): OpenAPI
       },
     },
 
+    [`${base}/{attachmentId}/download`]: {
+      get: {
+        tags: ["Attachments"],
+        summary: `Download an ${entityType} attachment`,
+        operationId: `download${entityType[0]!.toUpperCase()}${entityType.slice(1)}Attachment`,
+        description: permissionDescription(
+          `Redirects to a short-lived signed URL for a private ${entityType} attachment in the active workspace.`,
+          "attachment:read",
+        ),
+        parameters: [
+          { $ref: "#/components/parameters/EntityId" },
+          { $ref: "#/components/parameters/AttachmentId" },
+        ],
+        responses: {
+          "302": {
+            description: "Redirects to a short-lived signed download URL.",
+          },
+          ...protectedErrors,
+        },
+      },
+    },
+
     [`${base}/{attachmentId}`]: {
       delete: {
         tags: ["Attachments"],
         summary: `Delete an ${entityType} attachment`,
         operationId: `delete${entityType[0]!.toUpperCase()}${entityType.slice(1)}Attachment`,
         description: permissionDescription(
-          "Soft-deletes an attachment owned by the active workspace and removes it from future reads.",
+          "Deletes the stored file, then soft-deletes the attachment owned by the active workspace so it no longer appears in future reads.",
           "attachment:delete",
         ),
         parameters: [
