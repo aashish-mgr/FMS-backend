@@ -24,11 +24,23 @@ formats, and attachment upload, list, download, and delete operations.
 ```bash
 npm install
 npx prisma migrate dev
+npm run dev
+```
+
+`npm run dev` runs the TypeScript entry point with nodemon.
+
+## Production
+
+```bash
+npm install
+npm run build
+npx prisma migrate deploy
 npm start
 ```
 
-`npm start` runs the TypeScript entry point with nodemon. Use `npx prisma migrate
-deploy` in production rather than `prisma migrate dev`.
+`npm run build` regenerates the Prisma client and compiles the server to `dist/`.
+`npm start` runs the compiled `dist/server.js`. Use `npx prisma migrate deploy`
+in production rather than `prisma migrate dev`.
 
 ## Attachments and storage
 
