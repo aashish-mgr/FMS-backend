@@ -2,8 +2,11 @@ import pdfMake from "pdfmake";
 import path from "path";
 import type { TableCell } from "pdfmake/interfaces";
 
-// Bundled Roboto fonts ship inside the pdfmake package itself — no separate font files needed.
-const FONT_DIR = path.join(__dirname, "../../../node_modules/pdfmake/fonts/Roboto");
+// Resolve the bundled font from the installed package so the same path works
+// in TypeScript dev mode and in the compiled dist output.
+const FONT_DIR = path.dirname(
+  require.resolve("pdfmake/fonts/Roboto/Roboto-Regular.ttf"),
+);
 pdfMake.setUrlAccessPolicy(() => false);
 
 let fontsConfigured = false;
