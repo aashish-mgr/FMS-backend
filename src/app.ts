@@ -2,7 +2,6 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
-import { connectDb } from "./config/database";
 import authRoute from "./modules/auth/auth.routes";
 import incomeRoute from "./modules/income/income.routes";
 import expenseRoute from "./modules/expense/expense.routes"
@@ -56,8 +55,6 @@ app.use(
 );
 
 app.use(apiLimiter);
-
-connectDb();
 
 app.use("/api/auth", authRoute);
 app.use("/api/income", incomeRoute);
